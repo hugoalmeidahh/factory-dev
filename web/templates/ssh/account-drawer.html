@@ -1,0 +1,51 @@
+{{define "ssh/account-drawer.html"}}
+<form class="fdev-form" hx-post="{{.SubmitURL}}" hx-target="#main-content">
+  {{if .IsEdit}}<input type="hidden" name="id" value="{{.Account.ID}}">{{end}}
+
+  <label>Nome</label>
+  <input id="name" name="name" value="{{.Account.Name}}" oninput="suggestAlias()">
+  {{with index .Errors "name"}}<small class="err">{{.}}</small>{{end}}
+
+  <label>Provider</label>
+  <select id="provider" name="provider" onchange="suggestAlias()">
+    <option value="github" {{if eq .Account.Provider "github"}}selected{{end}}>github</option>
+    <option value="gitlab" {{if eq .Account.Provider "gitlab"}}selected{{end}}>gitlab</option>
+    <option value="bitbucket" {{if eq .Account.Provider "bitbucket"}}selected{{end}}>bitbucket</option>
+    <option value="other" {{if eq .Account.Provider "other"}}selected{{end}}>other</option>
+  </select>
+  {{with index .Errors "provider"}}<small class="err">{{.}}</small>{{end}}
+
+  <label>HostName</label>
+  <input name="hostName" value="{{.Account.HostName}}" placeholder="github.com">
+  {{with index .Errors "hostName"}}<small class="err">{{.}}</small>{{end}}
+
+  <label>HostAlias</label>
+  <input id="hostAlias" name="hostAlias" value="{{.Account.HostAlias}}" oninput="this.dataset.userEdited='1'">
+  {{with index .Errors "hostAlias"}}<small class="err">{{.}}</small>{{end}}
+  {{if .ShowAliasWarning}}<small class="warn">Alterar alias pode exigir gerar nova chave.</small>{{end}}
+
+  <label>Git User Name</label>
+  <input name="gitUserName" value="{{.Account.GitUserName}}">
+  {{with index .Errors "gitUserName"}}<small class="err">{{.}}</small>{{end}}
+
+  <label>Git User Email</label>
+  <input name="gitUserEmail" value="{{.Account.GitUserEmail}}">
+  {{with index .Errors "gitUserEmail"}}<small class="err">{{.}}</small>{{end}}
+
+  <div class="fdev-actions">
+    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Cancel</button>
+    <button type="submit" class="fdev-btn">Save</button>
+  </div>
+</form>
+
+<script>
+function suggestAlias() {
+  const provider = document.getElementById('provider')?.value
+  const name = (document.getElementById('name')?.value || '').toLowerCase().trim().replace(/\s+/g, '-')
+  const field = document.getElementById('hostAlias')
+  if (provider && name && field && !field.dataset.userEdited) {
+    field.value = provider + '-' + name
+  }
+}
+</script>
+{{end}}

@@ -1,0 +1,6 @@
+{{define "ssh/test-result.html"}}
+<div class="test-result {{if .OK}}ok{{else}}error{{end}}">
+  {{if .Error}}<strong>{{.Error}}</strong>{{end}}
+  <pre>{{.Output}}</pre>
+</div>
+{{end}}

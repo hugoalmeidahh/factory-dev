@@ -1,0 +1,92 @@
+{{define "ssh/accounts-list.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>SSH / Git Accounts</h1>
+      <p>Gerencie múltiplas identidades Git por host alias.</p>
+    </div>
+    <button class="fdev-btn"
+      hx-get="/tools/ssh/accounts/new"
+      hx-target="#drawer-content">
+      Nova Conta
+    </button>
+  </header>
+
+  {{if eq (len .Accounts) 0}}
+  <div class="fdev-empty">
+    <svg viewBox="0 0 24 24" width="64" height="64" aria-hidden="true"><path fill="currentColor" d="M7 14a5 5 0 1 1 4.9-6H20v2h-2v2h-2v2h-2v2h-2.1A5 5 0 0 1 7 14zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+    <h2>Nenhuma conta configurada ainda</h2>
+    <p>Adicione sua primeira conta Git para gerenciar múltiplas identidades no mesmo host.</p>
+    <button class="fdev-btn"
+      hx-get="/tools/ssh/accounts/new"
+      hx-target="#drawer-content">
+      Nova Conta
+    </button>
+  </div>
+  {{else}}
+  <div class="fdev-card-grid">
+    {{range .Accounts}}
+    <article class="fdev-account-card">
+      <button class="fdev-card-toggle" type="button" onclick="toggleAccountDetails('{{.ID}}')">
+        <div>
+          <h3>{{.Name}}</h3>
+          <p>{{.Provider}} · {{.HostAlias}}</p>
+        </div>
+        <span class="fdev-pill {{if .HasKey}}ok{{else}}warn{{end}}">
+          {{if .HasKey}}Chaves OK{{else}}Sem chave{{end}}
+        </span>
+      </button>
+
+      <div id="account-details-{{.ID}}" class="fdev-account-details hidden">
+        <div class="fdev-meta">
+          <div><strong>Git User:</strong> {{.GitUserName}}</div>
+          <div><strong>Git Email:</strong> {{.GitUserEmail}}</div>
+          <div><strong>HostName:</strong> {{.HostName}}</div>
+        </div>
+
+        <div class="fdev-code-block">
+          <div class="fdev-code-head">
+            <strong>Bloco SSH gerado</strong>
+          </div>
+          <pre>{{.SSHPreview}}</pre>
+        </div>
+
+        {{if .HasKey}}
+        <div class="fdev-code-block">
+          <div class="fdev-code-head">
+            <strong>Chave Pública</strong>
+            <button class="fdev-btn fdev-btn--ghost" type="button" onclick="toggleSecret('pub-{{.ID}}', this)">Mostrar</button>
+          </div>
+          <pre id="pub-{{.ID}}" class="secret hidden">{{.PublicKey}}</pre>
+        </div>
+
+        <div class="fdev-code-block">
+          <div class="fdev-code-head">
+            <strong>Chave Privada</strong>
+            <button class="fdev-btn fdev-btn--ghost" type="button" onclick="toggleSecret('priv-{{.ID}}', this)">Mostrar</button>
+          </div>
+          <pre id="priv-{{.ID}}" class="secret hidden">{{.PrivateKey}}</pre>
+        </div>
+        {{if .KeyErrorHint}}<small class="warn">{{.KeyErrorHint}}</small>{{end}}
+        {{end}}
+
+        <div class="fdev-actions">
+          <button class="fdev-btn fdev-btn--ghost" hx-get="/tools/ssh/accounts/{{.ID}}/edit" hx-target="#drawer-content">Edit</button>
+          {{if not .HasKey}}
+          <button class="fdev-btn fdev-btn--ghost" hx-post="/tools/ssh/accounts/{{.ID}}/generate-key" hx-target="#main-content">Generate Key</button>
+          {{end}}
+          <button class="fdev-btn fdev-btn--ghost" hx-post="/tools/ssh/accounts/{{.ID}}/preview-apply" hx-target="#drawer-content">Preview Diff</button>
+          <button class="fdev-btn fdev-btn--ghost" hx-post="/tools/ssh/accounts/{{.ID}}/apply-ssh" hx-target="#main-content">Apply SSH Config</button>
+          <button class="fdev-btn fdev-btn--ghost" hx-post="/tools/ssh/accounts/{{.ID}}/test" hx-target="#test-result-{{.ID}}" hx-swap="innerHTML">Test</button>
+          <button class="fdev-btn fdev-btn--danger" hx-delete="/tools/ssh/accounts/{{.ID}}" hx-target="#main-content" hx-confirm="Deletar {{.Name}}?">Delete</button>
+        </div>
+        <div id="test-result-{{.ID}}" class="test-result-slot"></div>
+      </div>
+    </article>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "ssh/accounts-list.html" .}}{{end}}

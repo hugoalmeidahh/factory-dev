@@ -1,0 +1,19 @@
+{{define "doctor.html"}}
+<section class="fdev-section">
+  <h1>Doctor</h1>
+  <table class="fdev-table">
+    <thead><tr><th>Check</th><th>Status</th><th>Mensagem</th></tr></thead>
+    <tbody>
+      {{range .Checks}}
+      <tr>
+        <td>{{.Name}}</td>
+        <td>{{if .OK}}OK{{else}}Falhou{{end}}</td>
+        <td>{{.Message}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</section>
+{{end}}
+
+{{define "content"}}{{template "doctor.html" .}}{{end}}

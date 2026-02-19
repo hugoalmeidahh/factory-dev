@@ -1,0 +1,9 @@
+{{define "partials/drawer-wrapper.html"}}
+<div class="fdev-drawer-header">
+  <h3>{{.Title}}</h3>
+  <button class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Fechar</button>
+</div>
+<div class="fdev-drawer-body">
+  {{.Content}}
+</div>
+{{end}}

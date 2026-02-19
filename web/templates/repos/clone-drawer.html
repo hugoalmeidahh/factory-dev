@@ -1,0 +1,24 @@
+{{define "repos/clone-drawer.html"}}
+<form class="fdev-form fdev-clone-form" hx-post="/tools/repos/clone" hx-target="#repo-clone-result" hx-swap="innerHTML">
+  <label>Conta SSH</label>
+  <select name="accountID" required>
+    <option value="">Selecione uma conta</option>
+    {{range .Accounts}}
+    <option value="{{.ID}}">{{.Name}} ({{.HostAlias}}) {{if .HasKey}}- chave OK{{else}}- sem chave{{end}}</option>
+    {{end}}
+  </select>
+
+  <label>URL do repositório</label>
+  <input type="text" name="repoURL" placeholder="https://github.com/org/repo.git" required>
+
+  <label>Diretório de destino</label>
+  <input type="text" name="destDir" value="{{.DefaultDest}}" placeholder="/home/user/workspace/repo" required>
+
+  <div class="fdev-actions">
+    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Cancelar</button>
+    <button type="submit" class="fdev-btn">Clonar</button>
+  </div>
+</form>
+
+<div id="repo-clone-result" class="repo-clone-result"></div>
+{{end}}

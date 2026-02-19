@@ -1,0 +1,47 @@
+{{define "repos/list.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Repositories</h1>
+      <p>Clone repositórios usando a conta SSH já configurada.</p>
+    </div>
+    <button class="fdev-btn"
+      hx-get="/tools/repos/clone/new"
+      hx-target="#drawer-content">
+      Novo Clone
+    </button>
+  </header>
+
+  {{if eq (len .Accounts) 0}}
+  <div class="fdev-empty">
+    <h2>Nenhuma conta SSH disponível</h2>
+    <p>Crie uma conta e gere chave em <strong>SSH / Git Accounts</strong> antes de clonar.</p>
+    <button class="fdev-btn"
+      hx-get="/tools/ssh/accounts"
+      hx-target="#main-content"
+      hx-push-url="/tools/ssh/accounts">
+      Ir para Accounts
+    </button>
+  </div>
+  {{else}}
+  <div class="fdev-card-grid">
+    {{range .Accounts}}
+    <article class="fdev-account-card">
+      <div class="fdev-card-toggle">
+        <div>
+          <h3>{{.Name}}</h3>
+          <p>{{.HostAlias}} · {{.HostName}}</p>
+        </div>
+        <span class="fdev-pill {{if .HasKey}}ok{{else}}warn{{end}}">
+          {{if .HasKey}}Pronta{{else}}Sem chave{{end}}
+        </span>
+      </div>
+    </article>
+    {{end}}
+  </div>
+  <p class="repo-clone-result">Use <strong>Novo Clone</strong> para abrir o formulário lateral.</p>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "repos/list.html" .}}{{end}}

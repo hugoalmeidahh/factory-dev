@@ -1,0 +1,28 @@
+{{define "partials/sidebar.html"}}
+<aside class="fdev-sidebar">
+  <div class="fdev-logo">FactoryDev</div>
+  <nav class="fdev-nav">
+    <a class="fdev-nav-item {{if eq .ActiveTool "ssh"}}active{{end}}"
+       href="/tools/ssh/accounts"
+       hx-get="/tools/ssh/accounts"
+       hx-target="#main-content"
+       hx-push-url="/tools/ssh/accounts">
+      SSH / Git Accounts
+    </a>
+    <a class="fdev-nav-item {{if eq .ActiveTool "repos"}}active{{end}}"
+       href="/tools/repos"
+       hx-get="/tools/repos"
+       hx-target="#main-content"
+       hx-push-url="/tools/repos">
+      Repositories
+    </a>
+    <a class="fdev-nav-item"
+       href="/doctor"
+       hx-get="/doctor"
+       hx-target="#main-content"
+       hx-push-url="/doctor">
+      Doctor
+    </a>
+  </nav>
+</aside>
+{{end}}

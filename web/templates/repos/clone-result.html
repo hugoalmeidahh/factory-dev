@@ -1,0 +1,7 @@
+{{define "repos/clone-result.html"}}
+<div class="clone-result {{if .OK}}ok{{else}}error{{end}}">
+  <strong>{{.Message}}</strong>
+  {{if .SSHURL}}<p><code>{{.SSHURL}}</code></p>{{end}}
+  {{if .Output}}<pre>{{.Output}}</pre>{{end}}
+</div>
+{{end}}

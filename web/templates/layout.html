@@ -1,0 +1,24 @@
+{{define "layout.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{.Title}}</title>
+  <script src="https://unpkg.com/htmx.org@2.0.0"></script>
+  <link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body class="fdev-body">
+  {{template "partials/sidebar.html" .}}
+
+  <main id="main-content" class="fdev-main">
+    {{template "content" .Data}}
+  </main>
+
+  {{template "partials/drawer.html" .}}
+
+  <div id="toast-container" class="fdev-toasts"></div>
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>
+{{end}}

@@ -1,0 +1,6 @@
+{{define "ssh/diff-preview.html"}}
+<div class="fdev-diff">
+  <h4>Preview de alteração</h4>
+  <pre>{{range .Lines}}<div class="line {{.Type}}">{{if eq .Type "added"}}+{{else if eq .Type "removed"}}-{{else}} {{end}} {{.Text}}</div>{{end}}</pre>
+</div>
+{{end}}
