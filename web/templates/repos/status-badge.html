@@ -1,0 +1,10 @@
+{{define "repos/status-badge.html"}}
+{{if not .Accessible}}
+  <span class="fdev-repo-status fdev-repo-status--error">caminho não encontrado</span>
+{{else}}
+  <span class="fdev-repo-branch">⎇ {{.Branch}}</span>
+  <span class="fdev-repo-status {{if .IsClean}}fdev-repo-status--ok{{else}}fdev-repo-status--dirty{{end}}">
+    {{.StatusShort}}
+  </span>
+{{end}}
+{{end}}

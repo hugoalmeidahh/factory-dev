@@ -1,0 +1,53 @@
+{{define "ssh/quick-key-drawer.html"}}
+<form class="fdev-form"
+      hx-post="{{.SubmitURL}}"
+      hx-target="#main-content"
+      x-data="{alias: '{{.Account.HostAlias}}'}"
+      @htmx:after-request="{}">
+
+  <p style="color:#5d5950;font-size:14px;margin:0 0 12px">
+    Gera um par de chaves SSH. Você pode configurar o alias Git depois.
+  </p>
+
+  <label>Nome da chave</label>
+  <input name="name" value="{{.Account.Name}}"
+         placeholder="ex: trabalho, pessoal, cliente-x"
+         required
+         @input="alias = $event.target.value.toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'key'">
+  {{with index .Errors "name"}}<small class="err">{{.}}</small>{{end}}
+
+  <label>Alias (identificador único)</label>
+  <input name="hostAlias"
+         :value="alias"
+         @input="alias = $event.target.value"
+         placeholder="ex: trabalho"
+         required>
+  {{with index .Errors "hostAlias"}}<small class="err">{{.}}</small>{{end}}
+
+  <label>Tipo de chave</label>
+  <div class="fdev-key-type-group">
+    <label class="fdev-key-type-option">
+      <input type="radio" name="keyType" value="ed25519"
+             {{if ne .Account.KeyType "rsa4096"}}checked{{end}}>
+      <span>
+        <strong>Ed25519</strong>
+        <small>Recomendado — rápido e seguro</small>
+      </span>
+    </label>
+    <label class="fdev-key-type-option">
+      <input type="radio" name="keyType" value="rsa4096"
+             {{if eq .Account.KeyType "rsa4096"}}checked{{end}}>
+      <span>
+        <strong>RSA 4096</strong>
+        <small>Compatibilidade máxima com sistemas legados</small>
+      </span>
+    </label>
+  </div>
+  {{with index .Errors "keyType"}}<small class="err">{{.}}</small>{{end}}
+
+  <div class="fdev-actions" style="margin-top:8px">
+    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Cancelar</button>
+    <button type="submit" class="fdev-btn">Criar Chave</button>
+  </div>
+</form>
+{{end}}

@@ -78,6 +78,7 @@ func (h *Handler) renderDrawer(w http.ResponseWriter, title, tmpl string, data a
 	}
 
 	w.Header().Set("X-FactoryDev-HX", "1")
+	w.Header().Set("HX-Retarget", "#drawer-content")
 	w.Header().Set("HX-Trigger", `openDrawer`)
 	ctx := map[string]any{
 		"Title":   title,
@@ -89,12 +90,17 @@ func (h *Handler) renderDrawer(w http.ResponseWriter, title, tmpl string, data a
 }
 
 func (h *Handler) successToast(w http.ResponseWriter, msg string) {
-	trigger := fmt.Sprintf(`{"showToast":{"msg":%q,"type":"success"},"closeDrawer":true,"refreshAccounts":true}`, msg)
+	trigger := fmt.Sprintf(`{"showToast":{"msg":%q,"type":"success"},"closeDrawer":true}`, msg)
 	w.Header().Set("HX-Trigger", trigger)
 }
 
 func (h *Handler) successToastOnly(w http.ResponseWriter, msg string) {
 	trigger := fmt.Sprintf(`{"showToast":{"msg":%q,"type":"success"}}`, msg)
+	w.Header().Set("HX-Trigger", trigger)
+}
+
+func (h *Handler) repoSuccessToast(w http.ResponseWriter, msg string) {
+	trigger := fmt.Sprintf(`{"showToast":{"msg":%q,"type":"success"},"closeDrawer":true}`, msg)
 	w.Header().Set("HX-Trigger", trigger)
 }
 

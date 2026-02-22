@@ -13,6 +13,7 @@ type Config struct {
 	OpenBrowser bool
 	WindowMode  string
 	FDevDir     string
+	Systray     bool
 }
 
 func ParseFlags(args []string) *Config {
@@ -23,6 +24,7 @@ func ParseFlags(args []string) *Config {
 	fs.BoolVar(&cfg.Debug, "debug", false, "Modo debug")
 	fs.BoolVar(&cfg.OpenBrowser, "open-browser", true, "Abre navegador automaticamente ao iniciar o servidor")
 	fs.StringVar(&cfg.WindowMode, "window-mode", "app", "Modo de abertura: app|browser")
+	fs.BoolVar(&cfg.Systray, "systray", false, "Exibe ícone na bandeja do sistema (requer build -tags systray)")
 	_ = fs.Parse(args)
 
 	if cfg.Port < 1024 || cfg.Port > 65535 {

@@ -59,6 +59,14 @@ func runServer() {
 	if cfg.OpenBrowser {
 		go openBrowser(a, cfg)
 	}
+	if cfg.Systray {
+		host := cfg.Host
+		if host == "0.0.0.0" || host == "" {
+			host = "127.0.0.1"
+		}
+		serverURL := fmt.Sprintf("http://%s:%d/", host, cfg.Port)
+		go runSystray(serverURL)
+	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

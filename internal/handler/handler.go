@@ -4,16 +4,31 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"sync"
 
 	"github.com/seuusuario/factorydev/internal/app"
 )
 
+// CloneJob representa um clone de repositório em andamento ou concluído.
+type CloneJob struct {
+	ID     string
+	Done   bool
+	OK     bool
+	Output string
+	Error  string
+}
+
 type Handler struct {
-	app *app.App
+	app       *app.App
+	cloneJobs map[string]*CloneJob
+	cloneMu   sync.Mutex
 }
 
 func New(a *app.App) *Handler {
-	return &Handler{app: a}
+	return &Handler{
+		app:       a,
+		cloneJobs: make(map[string]*CloneJob),
+	}
 }
 
 func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {

@@ -1,22 +1,25 @@
 {{define "partials/sidebar.html"}}
-<aside class="fdev-sidebar">
+<aside class="fdev-sidebar"
+       x-data="{page: '{{.ActiveTool}}'}"
+       @htmx:pushed-into-history.window="page = inferPage()"
+       @popstate.window="page = inferPage()">
   <div class="fdev-logo">FactoryDev</div>
   <nav class="fdev-nav">
-    <a class="fdev-nav-item {{if eq .ActiveTool "ssh"}}active{{end}}"
+    <a class="fdev-nav-item" :class="{active: page === 'ssh'}"
        href="/tools/ssh/accounts"
        hx-get="/tools/ssh/accounts"
        hx-target="#main-content"
        hx-push-url="/tools/ssh/accounts">
       SSH / Git Accounts
     </a>
-    <a class="fdev-nav-item {{if eq .ActiveTool "repos"}}active{{end}}"
+    <a class="fdev-nav-item" :class="{active: page === 'repos'}"
        href="/tools/repos"
        hx-get="/tools/repos"
        hx-target="#main-content"
        hx-push-url="/tools/repos">
       Repositories
     </a>
-    <a class="fdev-nav-item"
+    <a class="fdev-nav-item" :class="{active: page === 'doctor'}"
        href="/doctor"
        hx-get="/doctor"
        hx-target="#main-content"
@@ -24,5 +27,13 @@
       Doctor
     </a>
   </nav>
+
+  {{/* Badge de recursos não gerenciados — polling a cada 60s */}}
+  <div id="scan-badge-slot"
+       hx-get="/api/scan-summary"
+       hx-trigger="load, every 60s"
+       hx-swap="innerHTML"
+       class="fdev-scan-slot">
+  </div>
 </aside>
 {{end}}

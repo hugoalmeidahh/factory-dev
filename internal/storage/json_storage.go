@@ -20,7 +20,7 @@ func NewJSONStorage(path string) *JSONStorage {
 func (s *JSONStorage) LoadState() (*State, error) {
 	data, err := os.ReadFile(s.path)
 	if errors.Is(err, os.ErrNotExist) {
-		return &State{SchemaVersion: CurrentSchema, Accounts: make([]Account, 0)}, nil
+		return &State{SchemaVersion: CurrentSchema, Accounts: make([]Account, 0), Repositories: make([]Repository, 0)}, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("ler state: %w", err)
@@ -35,6 +35,9 @@ func (s *JSONStorage) LoadState() (*State, error) {
 	}
 	if state.Accounts == nil {
 		state.Accounts = make([]Account, 0)
+	}
+	if state.Repositories == nil {
+		state.Repositories = make([]Repository, 0)
 	}
 
 	if err := migrate(&state); err != nil {

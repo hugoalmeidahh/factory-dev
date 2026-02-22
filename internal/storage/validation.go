@@ -22,6 +22,7 @@ var (
 	}
 )
 
+// Validate valida um Account no modo completo (com config SSH).
 func Validate(a Account, existing []Account) []ValidationError {
 	var errs []ValidationError
 
@@ -58,6 +59,26 @@ func Validate(a Account, existing []Account) []ValidationError {
 	}
 	if !validEmailRe.MatchString(strings.TrimSpace(a.GitUserEmail)) {
 		errs = append(errs, ValidationError{Field: "gitUserEmail", Message: "email inválido"})
+	}
+
+	return errs
+}
+
+// ValidateSimple valida apenas nome e alias (modo simples, sem config SSH completa).
+func ValidateSimple(a Account, existing []Account) []ValidationError {
+	var errs []ValidationError
+
+	if strings.TrimSpace(a.Name) == "" {
+		errs = append(errs, ValidationError{Field: "name", Message: "obrigatório"})
+	}
+	if !validAliasRe.MatchString(a.HostAlias) {
+		errs = append(errs, ValidationError{Field: "hostAlias", Message: "apenas letras minúsculas, números, - e _"})
+	}
+	for _, e := range existing {
+		if e.HostAlias == a.HostAlias && e.ID != a.ID {
+			errs = append(errs, ValidationError{Field: "hostAlias", Message: "já existe"})
+			break
+		}
 	}
 
 	return errs

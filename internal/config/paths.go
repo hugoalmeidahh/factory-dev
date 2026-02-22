@@ -42,12 +42,34 @@ func (p *Paths) KeyDir(alias string) string {
 	return filepath.Join(p.Keys, alias)
 }
 
-func (p *Paths) PrivateKey(alias string) string {
-	return filepath.Join(p.KeyDir(alias), "id_ed25519")
+// keyFileName retorna o nome do arquivo para cada tipo de chave.
+func keyFileName(keyType string) string {
+	switch keyType {
+	case "rsa4096":
+		return "id_rsa"
+	default: // "ed25519" ou ""
+		return "id_ed25519"
+	}
 }
 
+// PrivateKey retorna o path Ed25519 (compatibilidade retroativa).
+func (p *Paths) PrivateKey(alias string) string {
+	return p.PrivateKeyForType(alias, "ed25519")
+}
+
+// PrivateKeyForType retorna o path da chave privada pelo tipo.
+func (p *Paths) PrivateKeyForType(alias, keyType string) string {
+	return filepath.Join(p.KeyDir(alias), keyFileName(keyType))
+}
+
+// PublicKey retorna o path Ed25519 (compatibilidade retroativa).
 func (p *Paths) PublicKey(alias string) string {
-	return filepath.Join(p.KeyDir(alias), "id_ed25519.pub")
+	return p.PublicKeyForType(alias, "ed25519")
+}
+
+// PublicKeyForType retorna o path da chave pública pelo tipo.
+func (p *Paths) PublicKeyForType(alias, keyType string) string {
+	return filepath.Join(p.KeyDir(alias), keyFileName(keyType)+".pub")
 }
 
 func (p *Paths) SSHDir() string {

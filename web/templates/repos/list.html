@@ -3,43 +3,84 @@
   <header class="fdev-header-row">
     <div>
       <h1>Repositories</h1>
-      <p>Clone repositórios usando a conta SSH já configurada.</p>
+      <p>Repositórios clonados via FactoryDev.</p>
     </div>
-    <button class="fdev-btn"
-      hx-get="/tools/repos/clone/new"
-      hx-target="#drawer-content">
-      Novo Clone
-    </button>
+    <div style="display:flex;gap:8px">
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+        hx-get="/tools/repos"
+        hx-target="#main-content"
+        title="Atualizar status de todos os repositórios">
+        ↻ Atualizar
+      </button>
+      <button class="fdev-btn"
+        hx-get="/tools/repos/clone/new"
+        hx-target="#drawer-content">
+        Novo Clone
+      </button>
+    </div>
   </header>
 
-  {{if eq (len .Accounts) 0}}
+  {{if eq (len .Repos) 0}}
   <div class="fdev-empty">
+    {{if eq (len .Accounts) 0}}
     <h2>Nenhuma conta SSH disponível</h2>
-    <p>Crie uma conta e gere chave em <strong>SSH / Git Accounts</strong> antes de clonar.</p>
+    <p>Crie uma conta em <strong>SSH / Git Accounts</strong> antes de clonar.</p>
     <button class="fdev-btn"
       hx-get="/tools/ssh/accounts"
       hx-target="#main-content"
       hx-push-url="/tools/ssh/accounts">
       Ir para Accounts
     </button>
+    {{else}}
+    <h2>Nenhum repositório clonado ainda</h2>
+    <p>Use <strong>Novo Clone</strong> para clonar um repositório usando uma conta SSH configurada.</p>
+    <button class="fdev-btn"
+      hx-get="/tools/repos/clone/new"
+      hx-target="#drawer-content">
+      Novo Clone
+    </button>
+    {{end}}
   </div>
   {{else}}
-  <div class="fdev-card-grid">
-    {{range .Accounts}}
-    <article class="fdev-account-card">
-      <div class="fdev-card-toggle">
-        <div>
-          <h3>{{.Name}}</h3>
-          <p>{{.HostAlias}} · {{.HostName}}</p>
+  <div class="fdev-list">
+    {{range .Repos}}
+    <article class="fdev-list-card">
+      <div class="fdev-list-card-header">
+        <div class="fdev-list-card-info">
+          <h3 class="fdev-list-card-name">{{.Name}}</h3>
+          <p class="fdev-list-card-sub">{{.LocalPath}}</p>
         </div>
-        <span class="fdev-pill {{if .HasKey}}ok{{else}}warn{{end}}">
-          {{if .HasKey}}Pronta{{else}}Sem chave{{end}}
-        </span>
+        <div class="fdev-list-card-actions">
+          {{/* Status dinâmico individual */}}
+          <span id="repo-status-{{.ID}}" class="fdev-repo-status-wrap">
+            {{if not .Accessible}}
+              <span class="fdev-repo-status fdev-repo-status--error">não encontrado</span>
+            {{else}}
+              <span class="fdev-repo-branch">⎇ {{.Branch}}</span>
+              <span class="fdev-repo-status {{if .IsClean}}fdev-repo-status--ok{{else}}fdev-repo-status--dirty{{end}}">
+                {{.StatusShort}}
+              </span>
+            {{end}}
+          </span>
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-get="/tools/repos/{{.ID}}/status"
+            hx-target="#repo-status-{{.ID}}"
+            hx-swap="innerHTML"
+            title="Atualizar status deste repositório">↻</button>
+          <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+            hx-delete="/tools/repos/{{.ID}}"
+            hx-target="#main-content"
+            hx-confirm="Remover {{.Name}} da lista?">Remover</button>
+        </div>
+      </div>
+      <div class="fdev-list-card-meta-strip">
+        <span><strong>URL:</strong> {{.URL}}</span>
+        <span><strong>Conta:</strong> {{.AccountName}}</span>
+        <span><strong>Clonado em:</strong> {{.ClonedAt.Format "02/01/2006 15:04"}}</span>
       </div>
     </article>
     {{end}}
   </div>
-  <p class="repo-clone-result">Use <strong>Novo Clone</strong> para abrir o formulário lateral.</p>
   {{end}}
 </section>
 {{end}}

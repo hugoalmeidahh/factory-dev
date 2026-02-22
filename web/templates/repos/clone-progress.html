@@ -1,0 +1,29 @@
+{{define "repos/clone-progress.html"}}
+<div id="clone-progress"
+  {{if not .Done}}
+  hx-get="/tools/repos/jobs/{{.ID}}"
+  hx-trigger="every 2s"
+  hx-swap="outerHTML"
+  {{end}}>
+
+  {{if .Done}}
+    {{if .OK}}
+    <div class="clone-result ok">
+      <strong>✓ Repositório clonado com sucesso!</strong>
+    </div>
+    {{else}}
+    <div class="clone-result error">
+      <strong>Falha ao clonar</strong>
+      <p>{{.Error}}</p>
+      {{if .Output}}<pre>{{.Output}}</pre>{{end}}
+    </div>
+    {{end}}
+  {{else}}
+  <div class="fdev-clone-running">
+    <span class="fdev-spinner"></span>
+    Clonando repositório…
+  </div>
+  {{end}}
+
+</div>
+{{end}}

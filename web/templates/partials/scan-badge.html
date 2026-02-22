@@ -1,0 +1,18 @@
+{{define "partials/scan-badge.html"}}
+{{if .HasUnmanaged}}
+<div class="fdev-scan-badge">
+  <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+  {{.Total}} não gerenciado{{if gt .Total 1}}s{{end}}
+  {{if .UnmanagedKeys}}
+  <div class="fdev-scan-detail">
+    {{range .UnmanagedKeys}}<span>🔑 {{.Alias}}</span>{{end}}
+  </div>
+  {{end}}
+  {{if .UnmanagedRepos}}
+  <div class="fdev-scan-detail">
+    {{range .UnmanagedRepos}}<span>📁 {{.Name}}</span>{{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}
+{{end}}
