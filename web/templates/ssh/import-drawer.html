@@ -1,0 +1,24 @@
+{{define "ssh/import-drawer.html"}}
+<div class="fdev-form">
+  <p style="color:#5d5950;font-size:14px">
+    Parseia um arquivo <code>~/.ssh/config</code> e importa blocos <code>Host</code>
+    não gerenciados pelo FactoryDev como novas contas SSH.
+  </p>
+
+  <label>Arquivo SSH config</label>
+  <div style="display:flex;gap:8px">
+    <input id="ssh-config-path" name="configPath" value="{{.ConfigPath}}"
+           placeholder="/home/user/.ssh/config"
+           style="flex:1;border:1px solid var(--border);border-radius:8px;padding:8px">
+    <button class="fdev-btn fdev-btn--ghost" type="button"
+      hx-post="/tools/ssh/import/validate"
+      hx-include="#ssh-config-path"
+      hx-target="#ssh-import-preview"
+      hx-swap="innerHTML">
+      Analisar
+    </button>
+  </div>
+
+  <div id="ssh-import-preview"></div>
+</div>
+{{end}}

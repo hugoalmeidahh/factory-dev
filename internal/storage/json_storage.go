@@ -20,7 +20,7 @@ func NewJSONStorage(path string) *JSONStorage {
 func (s *JSONStorage) LoadState() (*State, error) {
 	data, err := os.ReadFile(s.path)
 	if errors.Is(err, os.ErrNotExist) {
-		return &State{SchemaVersion: CurrentSchema, Accounts: make([]Account, 0), Repositories: make([]Repository, 0)}, nil
+		return &State{SchemaVersion: CurrentSchema, Keys: make([]Key, 0), Accounts: make([]Account, 0), Repositories: make([]Repository, 0), Servers: make([]Server, 0), Identities: make([]GitIdentity, 0)}, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("ler state: %w", err)
@@ -33,11 +33,20 @@ func (s *JSONStorage) LoadState() (*State, error) {
 	if state.SchemaVersion == 0 {
 		state.SchemaVersion = CurrentSchema
 	}
+	if state.Keys == nil {
+		state.Keys = make([]Key, 0)
+	}
 	if state.Accounts == nil {
 		state.Accounts = make([]Account, 0)
 	}
 	if state.Repositories == nil {
 		state.Repositories = make([]Repository, 0)
+	}
+	if state.Servers == nil {
+		state.Servers = make([]Server, 0)
+	}
+	if state.Identities == nil {
+		state.Identities = make([]GitIdentity, 0)
 	}
 
 	if err := migrate(&state); err != nil {

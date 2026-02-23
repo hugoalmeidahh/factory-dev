@@ -156,6 +156,134 @@ func cleanRepoName(name string) string {
 	return name
 }
 
+// CommitEntry representa um commit do histórico git.
+type CommitEntry struct {
+	Hash    string
+	Subject string
+	Author  string
+	Date    string
+}
+
+// Pull executa git pull no repositório local.
+func (s *Service) Pull(ctx context.Context, localPath, identityFile string) (string, error) {
+	cmd := exec.CommandContext(ctx, "git", "-C", localPath, "pull")
+	if identityFile != "" {
+		cmd.Env = append(os.Environ(),
+			"GIT_SSH_COMMAND=ssh -i "+identityFile+" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new",
+		)
+	}
+	out, err := cmd.CombinedOutput()
+	return string(out), err
+}
+
+// NewBranch cria e faz checkout de um novo branch.
+func (s *Service) NewBranch(ctx context.Context, localPath, branch string) error {
+	cmd := exec.CommandContext(ctx, "git", "-C", localPath, "checkout", "-b", branch)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s: %w", strings.TrimSpace(string(out)), err)
+	}
+	return nil
+}
+
+// GetLog retorna os últimos n commits a partir do offset.
+func (s *Service) GetLog(ctx context.Context, localPath string, n, offset int) ([]CommitEntry, error) {
+	args := []string{"-C", localPath, "log",
+		"--format=%H|%s|%an|%ad", "--date=short",
+		fmt.Sprintf("-n %d", n),
+		fmt.Sprintf("--skip=%d", offset),
+	}
+	cmd := exec.CommandContext(ctx, "git", args...)
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	var entries []CommitEntry
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, "|", 4)
+		if len(parts) < 4 {
+			continue
+		}
+		entries = append(entries, CommitEntry{
+			Hash:    parts[0][:min(len(parts[0]), 8)],
+			Subject: parts[1],
+			Author:  parts[2],
+			Date:    parts[3],
+		})
+	}
+	return entries, nil
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// GetRepoGitConfig retorna as configurações git locais do repositório.
+func (s *Service) GetRepoGitConfig(localPath string) (map[string]string, error) {
+	cmd := exec.Command("git", "-C", localPath, "config", "--list", "--local")
+	out, err := cmd.Output()
+	if err != nil {
+		// Sem config local não é erro
+		return map[string]string{}, nil
+	}
+	result := map[string]string{}
+	for _, line := range strings.Split(string(out), "\n") {
+		kv := strings.SplitN(line, "=", 2)
+		if len(kv) == 2 {
+			result[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		}
+	}
+	return result, nil
+}
+
+// SetRepoGitConfig define um valor de config git local no repositório.
+func (s *Service) SetRepoGitConfig(localPath, key, value string) error {
+	cmd := exec.Command("git", "-C", localPath, "config", key, value)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git config %s: %s", key, strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+// ScanForRepos escaneia root procurando diretórios git até maxDepth de profundidade.
+func (s *Service) ScanForRepos(root string, maxDepth int) ([]string, error) {
+	root, err := expandHome(root)
+	if err != nil {
+		return nil, err
+	}
+	var found []string
+	err = filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return filepath.SkipDir
+		}
+		if !d.IsDir() {
+			return nil
+		}
+		rel, _ := filepath.Rel(root, path)
+		depth := len(strings.Split(rel, string(os.PathSeparator)))
+		if rel == "." {
+			depth = 0
+		}
+		if depth > maxDepth {
+			return filepath.SkipDir
+		}
+		gitDir := filepath.Join(path, ".git")
+		if _, err := os.Stat(gitDir); err == nil {
+			found = append(found, path)
+			return filepath.SkipDir // não entra em subrepos
+		}
+		return nil
+	})
+	return found, err
+}
+
 var tildePathRe = regexp.MustCompile(`^~($|/)`)
 
 func expandHome(p string) (string, error) {

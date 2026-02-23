@@ -5,6 +5,13 @@
        @popstate.window="page = inferPage()">
   <div class="fdev-logo">FactoryDev</div>
   <nav class="fdev-nav">
+    <a class="fdev-nav-item" :class="{active: page === 'keys'}"
+       href="/tools/keys"
+       hx-get="/tools/keys"
+       hx-target="#main-content"
+       hx-push-url="/tools/keys">
+      Key Manager
+    </a>
     <a class="fdev-nav-item" :class="{active: page === 'ssh'}"
        href="/tools/ssh/accounts"
        hx-get="/tools/ssh/accounts"

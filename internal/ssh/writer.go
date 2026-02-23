@@ -60,11 +60,15 @@ func GenerateAppliedConfig(account storage.Account, paths *config.Paths) (string
 }
 
 func buildFDevBlock(account storage.Account, paths *config.Paths) []string {
+	identityFile := account.IdentityFile
+	if identityFile == "" {
+		identityFile = paths.PrivateKey(account.HostAlias)
+	}
 	return []string{
 		"Host " + account.HostAlias,
 		"  HostName " + account.HostName,
 		"  User git",
-		"  IdentityFile " + paths.PrivateKey(account.HostAlias),
+		"  IdentityFile " + identityFile,
 		"  IdentitiesOnly yes",
 	}
 }

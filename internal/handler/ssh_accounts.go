@@ -3,6 +3,7 @@ package handler
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"os"
 	"regexp"
@@ -23,20 +24,16 @@ type accountView struct {
 	SSHPreview   string
 	KeyErrorHint string
 	KeyTypeLabel string
+	KeyName      string // nome da chave vinculada (se houver)
 }
 
 type accountFormData struct {
 	Account          storage.Account
+	Keys             []storage.Key // chaves disponíveis para seleção
 	Errors           map[string]string
 	SubmitURL        string
 	IsEdit           bool
 	ShowAliasWarning bool
-}
-
-type simpleKeyFormData struct {
-	Account   storage.Account
-	Errors    map[string]string
-	SubmitURL string
 }
 
 func (h *Handler) ListAccounts(w http.ResponseWriter, r *http.Request) {
@@ -47,27 +44,54 @@ func (h *Handler) ListAccounts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Mapa rápido: keyID → Key
+	keyMap := make(map[string]storage.Key, len(state.Keys))
+	for _, k := range state.Keys {
+		keyMap[k.ID] = k
+	}
+
 	accounts := make([]accountView, 0, len(state.Accounts))
 	for _, a := range state.Accounts {
-		kt := a.EffectiveKeyType()
-		privPath := h.app.Paths.PrivateKeyForType(a.HostAlias, kt)
-		pubPath := h.app.Paths.PublicKeyForType(a.HostAlias, kt)
-		_, err := os.Stat(privPath)
-		hasKey := err == nil
+		var privPath, pubPath, keyTyp, keyName string
+
+		if a.KeyID != "" {
+			if k, ok := keyMap[a.KeyID]; ok {
+				privPath = k.PrivateKeyPath
+				pubPath = k.PublicKeyPath
+				keyTyp = k.Type
+				if k.Bits > 0 {
+					keyTyp = fmt.Sprintf("%s-%d", k.Type, k.Bits)
+				}
+				keyName = k.Name
+			}
+		} else if a.IdentityFile != "" {
+			// Legacy: usa IdentityFile diretamente
+			kt := a.EffectiveKeyType()
+			privPath = h.app.Paths.PrivateKeyForType(a.HostAlias, kt)
+			pubPath = h.app.Paths.PublicKeyForType(a.HostAlias, kt)
+			keyTyp = kt
+		}
+
+		var hasKey bool
 		var privText, pubText, keyErrorHint string
-		if hasKey {
-			privBytes, privErr := os.ReadFile(privPath)
-			pubBytes, pubErr := os.ReadFile(pubPath)
-			if privErr == nil {
-				privText = string(privBytes)
-			}
-			if pubErr == nil {
-				pubText = string(pubBytes)
-			}
-			if privErr != nil || pubErr != nil {
-				keyErrorHint = "Não foi possível ler uma das chaves no disco."
+		if privPath != "" {
+			_, err := os.Stat(privPath)
+			hasKey = err == nil
+			if hasKey {
+				privBytes, privErr := os.ReadFile(privPath)
+				pubBytes, pubErr := os.ReadFile(pubPath)
+				if privErr == nil {
+					privText = string(privBytes)
+				}
+				if pubErr == nil {
+					pubText = string(pubBytes)
+				}
+				if privErr != nil || pubErr != nil {
+					keyErrorHint = "Não foi possível ler uma das chaves no disco."
+				}
 			}
 		}
+
 		accounts = append(accounts, accountView{
 			Account:      a,
 			HasKey:       hasKey,
@@ -75,103 +99,35 @@ func (h *Handler) ListAccounts(w http.ResponseWriter, r *http.Request) {
 			PublicKey:    strings.TrimSpace(pubText),
 			SSHPreview:   buildSSHPreview(a, privPath),
 			KeyErrorHint: keyErrorHint,
-			KeyTypeLabel: keyTypeLabel(kt),
+			KeyTypeLabel: keyTypeLabel(keyTyp),
+			KeyName:      keyName,
 		})
 	}
 
-	data := PageData{
+	data := map[string]any{"Accounts": accounts}
+	pageData := PageData{
 		Title:      "FactoryDev",
 		ActiveTool: "ssh",
 		ContentTpl: "ssh/accounts-list.html",
-		Data: map[string]any{
-			"Accounts": accounts,
-		},
+		Data:       data,
 	}
 	if r.Header.Get("HX-Request") == "true" {
-		h.render(w, "ssh/accounts-list.html", data.Data)
+		h.render(w, "ssh/accounts-list.html", data)
 		return
 	}
-	h.render(w, "ssh/accounts-list.html", data)
+	h.render(w, "ssh/accounts-list.html", pageData)
 }
 
-// ── Modo simples (Nova Chave) ─────────────────────────────────────
-
-func (h *Handler) NewSimpleKeyDrawer(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) NewAccountDrawer(w http.ResponseWriter, r *http.Request) {
 	markHX(w, r)
-	h.renderDrawer(w, "Nova Chave SSH", "ssh/quick-key-drawer.html", simpleKeyFormData{
-		Account:   storage.Account{KeyType: "ed25519"},
-		Errors:    map[string]string{},
-		SubmitURL: "/tools/ssh/keys",
-	})
-}
-
-func (h *Handler) CreateSimpleKey(w http.ResponseWriter, r *http.Request) {
-	markHX(w, r)
-	if err := r.ParseForm(); err != nil {
-		h.operationError(w, "Formulário inválido", http.StatusBadRequest)
-		return
-	}
-
-	name := strings.TrimSpace(r.FormValue("name"))
-	keyType := r.FormValue("keyType")
-	if keyType != "rsa4096" {
-		keyType = "ed25519"
-	}
-
-	alias := sanitizeAlias(name)
-	a := storage.Account{
-		ID:          newID(),
-		Name:        name,
-		HostAlias:   alias,
-		KeyType:     keyType,
-		IsSimpleKey: true,
-		Provider:    "other",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	// Permite alias customizado do formulário
-	if custom := strings.TrimSpace(r.FormValue("hostAlias")); custom != "" {
-		a.HostAlias = custom
-	}
-	a.IdentityFile = h.app.Paths.PrivateKeyForType(a.HostAlias, keyType)
-
 	state, err := h.app.Storage.LoadState()
 	if err != nil {
 		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
 		return
 	}
-
-	if errs := storage.ValidateSimple(a, state.Accounts); len(errs) > 0 {
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		h.renderDrawer(w, "Nova Chave SSH", "ssh/quick-key-drawer.html", simpleKeyFormData{
-			Account:   a,
-			Errors:    mapValidation(errs),
-			SubmitURL: "/tools/ssh/keys",
-		})
-		return
-	}
-
-	state.Accounts = append(state.Accounts, a)
-	if err := h.app.Storage.SaveState(state); err != nil {
-		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
-		return
-	}
-
-	if err := ssh.GenerateKey(a.HostAlias, a.Name, keyType, h.app.Paths); err != nil && err != ssh.ErrKeyExists {
-		h.app.Logger.Warn("falha ao gerar chave simples", "alias", a.HostAlias, "err", err)
-	}
-
-	h.successToast(w, "Chave criada com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListAccounts(w, r)
-}
-
-// ── Modo completo (Nova Conta) ─────────────────────────────────────
-
-func (h *Handler) NewAccountDrawer(w http.ResponseWriter, r *http.Request) {
-	markHX(w, r)
 	h.renderDrawer(w, "Nova Conta SSH", "ssh/account-drawer.html", accountFormData{
-		Account:   storage.Account{Provider: "github", KeyType: "ed25519"},
+		Account:   storage.Account{Provider: "github"},
+		Keys:      state.Keys,
 		Errors:    map[string]string{},
 		SubmitURL: "/tools/ssh/accounts",
 	})
@@ -192,11 +148,11 @@ func (h *Handler) EditAccountDrawer(w http.ResponseWriter, r *http.Request) {
 	}
 	a := state.Accounts[idx]
 
-	_, keyErr := os.Stat(h.app.Paths.PrivateKeyForType(a.HostAlias, a.EffectiveKeyType()))
-	showAliasWarning := keyErr == nil
+	showAliasWarning := a.KeyID != "" || a.IdentityFile != ""
 
 	h.renderDrawer(w, "Configurar Conta SSH", "ssh/account-drawer.html", accountFormData{
 		Account:          a,
+		Keys:             state.Keys,
 		Errors:           map[string]string{},
 		SubmitURL:        "/tools/ssh/accounts/" + id,
 		IsEdit:           true,
@@ -215,7 +171,6 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	a.ID = newID()
 	a.CreatedAt = time.Now()
 	a.UpdatedAt = time.Now()
-	a.IdentityFile = h.app.Paths.PrivateKeyForType(a.HostAlias, a.EffectiveKeyType())
 
 	state, err := h.app.Storage.LoadState()
 	if err != nil {
@@ -227,21 +182,30 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		h.renderDrawer(w, "Nova Conta SSH", "ssh/account-drawer.html", accountFormData{
 			Account:   a,
+			Keys:      state.Keys,
 			Errors:    mapValidation(errs),
 			SubmitURL: "/tools/ssh/accounts",
 		})
 		return
 	}
 
-	state.Accounts = append(state.Accounts, a)
-	if err := h.app.Storage.SaveState(state); err != nil {
+	// Resolver chave (selecionar existente ou criar inline)
+	if err := h.resolveAccountKey(r, &a, state); err != nil {
 		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
 		return
 	}
 
-	kt := a.EffectiveKeyType()
-	if err := ssh.GenerateKey(a.HostAlias, a.GitUserEmail, kt, h.app.Paths); err != nil && err != ssh.ErrKeyExists {
-		h.app.Logger.Warn("falha ao gerar chave automaticamente", "alias", a.HostAlias, "err", err)
+	// Atualizar IdentityFile para compat com ApplySSHConfig
+	if a.KeyID != "" {
+		if idx := findKeyIndex(state.Keys, a.KeyID); idx >= 0 {
+			a.IdentityFile = state.Keys[idx].PrivateKeyPath
+		}
+	}
+
+	state.Accounts = append(state.Accounts, a)
+	if err := h.app.Storage.SaveState(state); err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
 	}
 
 	h.successToast(w, "Conta criada com sucesso!")
@@ -271,11 +235,14 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	old := state.Accounts[idx]
 	a := accountFromRequest(r)
 	a.ID = old.ID
-	a.KeyType = old.KeyType // preserva o tipo de chave original
 	a.CreatedAt = old.CreatedAt
 	a.UpdatedAt = time.Now()
-	a.IdentityFile = h.app.Paths.PrivateKeyForType(a.HostAlias, a.EffectiveKeyType())
-	// Se preencheu todos os campos, deixa de ser chave simples
+	// Preserva legado se a nova conta não especifica chave
+	if a.KeyID == "" {
+		a.KeyID = old.KeyID
+		a.IdentityFile = old.IdentityFile
+		a.KeyType = old.KeyType
+	}
 	if a.Provider != "" && a.HostName != "" && a.GitUserName != "" && a.GitUserEmail != "" {
 		a.IsSimpleKey = false
 	} else {
@@ -287,12 +254,28 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 		showAliasWarning := old.HostAlias != a.HostAlias
 		h.renderDrawer(w, "Configurar Conta SSH", "ssh/account-drawer.html", accountFormData{
 			Account:          a,
+			Keys:             state.Keys,
 			Errors:           mapValidation(errs),
 			SubmitURL:        "/tools/ssh/accounts/" + id,
 			IsEdit:           true,
 			ShowAliasWarning: showAliasWarning,
 		})
 		return
+	}
+
+	// Resolver chave (somente se keyMode estiver no form)
+	if r.FormValue("keyMode") != "" {
+		if err := h.resolveAccountKey(r, &a, state); err != nil {
+			h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Atualizar IdentityFile para compat com ApplySSHConfig
+	if a.KeyID != "" {
+		if kidx := findKeyIndex(state.Keys, a.KeyID); kidx >= 0 {
+			a.IdentityFile = state.Keys[kidx].PrivateKeyPath
+		}
 	}
 
 	state.Accounts[idx] = a
@@ -321,9 +304,8 @@ func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	target := state.Accounts[idx]
-	kt := target.EffectiveKeyType()
-	if _, err := os.Stat(h.app.Paths.PrivateKeyForType(target.HostAlias, kt)); err == nil {
-		h.app.Logger.Warn("conta removida mantendo chave no disco", "alias", target.HostAlias)
+	if target.KeyID != "" {
+		h.app.Logger.Info("conta removida, chave permanece no Key Manager", "alias", target.HostAlias, "keyID", target.KeyID)
 	}
 
 	state.Accounts = append(state.Accounts[:idx], state.Accounts[idx+1:]...)
@@ -337,33 +319,17 @@ func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	h.ListAccounts(w, r)
 }
 
-func (h *Handler) GenerateKey(w http.ResponseWriter, r *http.Request) {
-	markHX(w, r)
-	a, ok := h.accountByID(w, r)
-	if !ok {
-		return
-	}
-
-	kt := a.EffectiveKeyType()
-	comment := a.GitUserEmail
-	if comment == "" {
-		comment = a.Name
-	}
-	if err := ssh.ForceGenerateKey(a.HostAlias, comment, kt, h.app.Paths); err != nil {
-		h.operationError(w, app.FriendlyMessage(err), http.StatusBadRequest)
-		return
-	}
-
-	h.successToast(w, "Chave gerada com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListAccounts(w, r)
-}
-
 func (h *Handler) ApplySSHConfig(w http.ResponseWriter, r *http.Request) {
 	markHX(w, r)
-	a, ok := h.accountByID(w, r)
+	a, state, ok := h.accountByIDWithState(w, r)
 	if !ok {
 		return
+	}
+	// Resolver IdentityFile pelo Key Manager
+	if a.KeyID != "" {
+		if idx := findKeyIndex(state.Keys, a.KeyID); idx >= 0 {
+			a.IdentityFile = state.Keys[idx].PrivateKeyPath
+		}
 	}
 
 	if err := ssh.ApplyAccount(a, h.app.Paths); err != nil {
@@ -378,9 +344,14 @@ func (h *Handler) ApplySSHConfig(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) PreviewApplySSHConfig(w http.ResponseWriter, r *http.Request) {
 	markHX(w, r)
-	a, ok := h.accountByID(w, r)
+	a, state, ok := h.accountByIDWithState(w, r)
 	if !ok {
 		return
+	}
+	if a.KeyID != "" {
+		if idx := findKeyIndex(state.Keys, a.KeyID); idx >= 0 {
+			a.IdentityFile = state.Keys[idx].PrivateKeyPath
+		}
 	}
 	lines, err := ssh.PreviewApply(a, h.app.Paths)
 	if err != nil {
@@ -425,6 +396,83 @@ func (h *Handler) accountByID(w http.ResponseWriter, r *http.Request) (storage.A
 	return state.Accounts[idx], true
 }
 
+func (h *Handler) accountByIDWithState(w http.ResponseWriter, r *http.Request) (storage.Account, *storage.State, bool) {
+	id := chi.URLParam(r, "id")
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return storage.Account{}, nil, false
+	}
+	idx := findAccountIndex(state.Accounts, id)
+	if idx < 0 {
+		h.operationError(w, "Conta não encontrada", http.StatusNotFound)
+		return storage.Account{}, nil, false
+	}
+	return state.Accounts[idx], state, true
+}
+
+// resolveAccountKey lida com seleção ou criação inline de chave.
+// Modifica account.KeyID e, se "new", também adiciona Key a state.Keys.
+func (h *Handler) resolveAccountKey(r *http.Request, account *storage.Account, state *storage.State) error {
+	keyMode := r.FormValue("keyMode")
+	switch keyMode {
+	case "existing":
+		account.KeyID = r.FormValue("keyID")
+	case "new":
+		keyType := r.FormValue("newKeyType")
+		if keyType == "" {
+			keyType = "ed25519"
+		}
+		bits := parseBits(r.FormValue("newKeyBits"))
+		comment := strings.TrimSpace(r.FormValue("newKeyComment"))
+		if comment == "" {
+			comment = account.GitUserEmail
+			if comment == "" {
+				comment = account.Name
+			}
+		}
+		passphrase := []byte(r.FormValue("newKeyPassphrase"))
+
+		alias := account.HostAlias
+		base := alias
+		for i := 2; ; i++ {
+			conflict := false
+			for _, k := range state.Keys {
+				if k.Alias == alias {
+					conflict = true
+					break
+				}
+			}
+			if !conflict {
+				break
+			}
+			alias = fmt.Sprintf("%s-%d", base, i)
+		}
+
+		result, err := ssh.GenerateKeyFull(alias, comment, keyType, bits, passphrase, h.app.Paths)
+		if err != nil {
+			return err
+		}
+
+		k := storage.Key{
+			ID:             newID(),
+			Name:           account.Name,
+			Alias:          alias,
+			Type:           keyType,
+			Bits:           bits,
+			Comment:        comment,
+			Protected:      len(passphrase) > 0,
+			PrivateKeyPath: result.PrivateKeyPath,
+			PublicKeyPath:  result.PublicKeyPath,
+			Source:         "generated",
+			CreatedAt:      time.Now(),
+		}
+		state.Keys = append(state.Keys, k)
+		account.KeyID = k.ID
+	}
+	return nil
+}
+
 func findAccountIndex(accounts []storage.Account, id string) int {
 	for i := range accounts {
 		if accounts[i].ID == id {
@@ -435,10 +483,6 @@ func findAccountIndex(accounts []storage.Account, id string) int {
 }
 
 func accountFromRequest(r *http.Request) storage.Account {
-	kt := r.FormValue("keyType")
-	if kt != "rsa4096" {
-		kt = "ed25519"
-	}
 	return storage.Account{
 		Name:         r.FormValue("name"),
 		Provider:     r.FormValue("provider"),
@@ -446,7 +490,7 @@ func accountFromRequest(r *http.Request) storage.Account {
 		HostAlias:    r.FormValue("hostAlias"),
 		GitUserName:  r.FormValue("gitUserName"),
 		GitUserEmail: r.FormValue("gitUserEmail"),
-		KeyType:      kt,
+		KeyID:        r.FormValue("keyID"),
 	}
 }
 
@@ -457,8 +501,11 @@ func newID() string {
 }
 
 func buildSSHPreview(a storage.Account, identityPath string) string {
-	if a.IsSimpleKey || a.HostName == "" {
-		return "# Chave simples — configure SSH alias para usar com git clone"
+	if a.HostName == "" {
+		return "# Configure HostName para usar com git clone via SSH alias"
+	}
+	if identityPath == "" {
+		identityPath = "~/.fdev/keys/" + a.HostAlias + "/id_ed25519"
 	}
 	return strings.Join([]string{
 		"# BEGIN FDEV " + a.HostAlias,
@@ -473,7 +520,6 @@ func buildSSHPreview(a storage.Account, identityPath string) string {
 
 var nonAlnum = regexp.MustCompile(`[^a-z0-9]+`)
 
-// sanitizeAlias transforma um nome qualquer em alias válido (lowercase, sem espaços).
 func sanitizeAlias(name string) string {
 	s := strings.ToLower(strings.TrimSpace(name))
 	s = nonAlnum.ReplaceAllString(s, "-")
@@ -486,8 +532,10 @@ func sanitizeAlias(name string) string {
 
 func keyTypeLabel(kt string) string {
 	switch kt {
-	case "rsa4096":
-		return "RSA 4096"
+	case "rsa", "rsa4096":
+		return "RSA"
+	case "ecdsa":
+		return "ECDSA"
 	default:
 		return "Ed25519"
 	}

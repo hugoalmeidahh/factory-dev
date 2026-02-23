@@ -1,0 +1,24 @@
+{{define "keys/import-drawer.html"}}
+<div class="fdev-form">
+  <p style="color:#5d5950;font-size:14px">
+    Escaneia um diretório em busca de pares de chaves SSH (<code>id_*</code> / <code>id_*.pub</code>)
+    e copia os selecionados para <code>~/.fdev/keys/</code>. Os arquivos originais não são alterados.
+  </p>
+
+  <label>Diretório de origem</label>
+  <div style="display:flex;gap:8px">
+    <input id="import-dir" name="dir" value="{{.Dir}}"
+           placeholder="/home/user/.ssh"
+           style="flex:1;border:1px solid var(--border);border-radius:8px;padding:8px">
+    <button class="fdev-btn fdev-btn--ghost" type="button"
+      hx-post="/tools/keys/import/validate"
+      hx-include="#import-dir"
+      hx-target="#key-import-preview"
+      hx-swap="innerHTML">
+      Escanear
+    </button>
+  </div>
+
+  <div id="key-import-preview"></div>
+</div>
+{{end}}

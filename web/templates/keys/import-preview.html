@@ -1,0 +1,45 @@
+{{define "keys/import-preview.html"}}
+{{if .Error}}
+<div class="fdev-info-box" style="background:#fdebec;border-color:#e1a0a0;color:#7a1e1e;margin-top:12px">
+  {{.Error}}
+</div>
+{{else if eq (len .Candidates) 0}}
+<div class="fdev-info-box" style="margin-top:12px">
+  Nenhum par de chaves encontrado em <code>{{.Dir}}</code>.
+</div>
+{{else}}
+<form hx-post="/tools/keys/import" hx-target="#main-content" style="margin-top:12px">
+  <input type="hidden" name="dir" value="{{.Dir}}">
+
+  <p style="font-size:13px;color:#5d5950;margin:0 0 8px">
+    {{len .Candidates}} par(es) encontrado(s). Selecione os que deseja importar:
+  </p>
+
+  <div class="fdev-list" style="gap:4px;margin-bottom:12px">
+    {{range .Candidates}}
+    <label class="fdev-key-type-option" style="cursor:pointer">
+      <input type="checkbox" name="selected" value="{{.Name}}" checked style="accent-color:var(--accent)">
+      <div style="flex:1;min-width:0">
+        <strong>{{.Name}}</strong>
+        <div style="font-size:12px;color:#5d5950;display:flex;gap:8px;flex-wrap:wrap">
+          <span>
+            {{if eq .Type "ed25519"}}Ed25519
+            {{else if eq .Type "rsa"}}RSA{{if .Bits}} {{.Bits}}b{{end}}
+            {{else if eq .Type "ecdsa"}}ECDSA{{if .Bits}} P-{{.Bits}}{{end}}
+            {{else}}{{.Type}}{{end}}
+          </span>
+          {{if .Protected}}<span style="color:#6b3fa0">🔒 protegida</span>{{end}}
+          <span style="font-family:monospace;font-size:11px">{{.PrivatePath}}</span>
+        </div>
+      </div>
+    </label>
+    {{end}}
+  </div>
+
+  <div class="fdev-actions">
+    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Cancelar</button>
+    <button type="submit" class="fdev-btn">Importar Selecionadas</button>
+  </div>
+</form>
+{{end}}
+{{end}}

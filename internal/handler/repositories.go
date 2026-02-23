@@ -7,12 +7,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/seuusuario/factorydev/internal/app"
+	igit "github.com/seuusuario/factorydev/internal/git"
 	"github.com/seuusuario/factorydev/internal/storage"
 )
 
@@ -26,11 +28,13 @@ type reposAccountView struct {
 
 type repoView struct {
 	storage.Repository
-	AccountName string
-	Branch      string
-	IsClean     bool
-	StatusShort string
-	Accessible  bool
+	AccountName  string
+	Branch       string
+	IsClean      bool
+	StatusShort  string
+	Accessible   bool
+	LastCommit   *igit.CommitEntry
+	IdentityName string
 }
 
 func (h *Handler) Repositories(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +58,6 @@ func (h *Handler) Repositories(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Busca status git em paralelo com timeout
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	for i := range views {
@@ -95,7 +98,6 @@ func (h *Handler) Repositories(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// RepoStatus retorna o status atualizado de um repositório individual (partial HTML).
 func (h *Handler) RepoStatus(w http.ResponseWriter, r *http.Request) {
 	markHX(w, r)
 	id := chi.URLParam(r, "id")
@@ -140,8 +142,6 @@ func (h *Handler) NewCloneDrawer(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// StartCloneJob inicia o clone de forma assíncrona e retorna imediatamente
-// com um spinner. O cliente faz polling em /tools/repos/jobs/{id}.
 func (h *Handler) StartCloneJob(w http.ResponseWriter, r *http.Request) {
 	markHX(w, r)
 	if err := r.ParseForm(); err != nil {
@@ -237,8 +237,6 @@ func (h *Handler) StartCloneJob(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// CloneJobStatus retorna o estado atual do job (polling HTMX).
-// Retorna HTTP 286 quando concluído, parando o polling automaticamente.
 func (h *Handler) CloneJobStatus(w http.ResponseWriter, r *http.Request) {
 	markHX(w, r)
 	id := chi.URLParam(r, "id")
@@ -267,7 +265,7 @@ func (h *Handler) CloneJobStatus(w http.ResponseWriter, r *http.Request) {
 		} else {
 			h.errorToast(w, errMsg)
 		}
-		w.WriteHeader(286) // para o polling HTMX
+		w.WriteHeader(286)
 	}
 
 	h.render(w, "repos/clone-progress.html", map[string]any{
@@ -308,6 +306,411 @@ func (h *Handler) DeleteRepository(w http.ResponseWriter, r *http.Request) {
 	h.Repositories(w, r)
 }
 
+// ── Scan Repos ────────────────────────────────────────────────────
+
+func (h *Handler) ScanReposDrawer(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	h.renderDrawer(w, "Escanear Repositórios", "repos/scan-drawer.html", map[string]any{
+		"DefaultPath": h.app.Paths.Home,
+	})
+}
+
+func (h *Handler) ValidateScanPath(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	if err := r.ParseForm(); err != nil {
+		h.operationError(w, "Formulário inválido", http.StatusBadRequest)
+		return
+	}
+	root := strings.TrimSpace(r.FormValue("scanPath"))
+	if root == "" {
+		h.operationError(w, "Caminho é obrigatório", http.StatusBadRequest)
+		return
+	}
+
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+
+	managedPaths := make(map[string]bool, len(state.Repositories))
+	for _, repo := range state.Repositories {
+		managedPaths[repo.LocalPath] = true
+	}
+
+	svc := igit.NewService()
+	found, err := svc.ScanForRepos(root, 3)
+	if err != nil {
+		h.operationError(w, "Erro ao escanear: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	type scanCandidate struct {
+		Path         string
+		Name         string
+		AlreadyInUse bool
+	}
+	var candidates []scanCandidate
+	for _, p := range found {
+		candidates = append(candidates, scanCandidate{
+			Path:         p,
+			Name:         filepath.Base(p),
+			AlreadyInUse: managedPaths[p],
+		})
+	}
+
+	h.render(w, "repos/scan-preview.html", map[string]any{
+		"Candidates": candidates,
+		"Total":      len(candidates),
+	})
+}
+
+func (h *Handler) ImportScannedRepos(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	if err := r.ParseForm(); err != nil {
+		h.operationError(w, "Formulário inválido", http.StatusBadRequest)
+		return
+	}
+
+	paths := r.Form["repoPaths"]
+	if len(paths) == 0 {
+		h.successToast(w, "Nenhum repositório selecionado.")
+		h.Repositories(w, r)
+		return
+	}
+
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+
+	managedPaths := make(map[string]bool)
+	for _, repo := range state.Repositories {
+		managedPaths[repo.LocalPath] = true
+	}
+
+	imported := 0
+	for _, p := range paths {
+		if managedPaths[p] {
+			continue
+		}
+		state.Repositories = append(state.Repositories, storage.Repository{
+			ID:        newID(),
+			Name:      filepath.Base(p),
+			LocalPath: p,
+			ClonedAt:  time.Now(),
+		})
+		imported++
+	}
+
+	if err := h.app.Storage.SaveState(state); err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+
+	alreadyManaged := len(paths) - imported
+	msg := fmt.Sprintf("%d repositório(s) importado(s)", imported)
+	if alreadyManaged > 0 {
+		msg += fmt.Sprintf(", %d já gerenciado(s)", alreadyManaged)
+	}
+	h.successToast(w, msg)
+	h.Repositories(w, r)
+}
+
+// ── Pull Job ──────────────────────────────────────────────────────
+
+func (h *Handler) StartPullJob(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	id := chi.URLParam(r, "id")
+
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+
+	var repo *storage.Repository
+	for i := range state.Repositories {
+		if state.Repositories[i].ID == id {
+			repo = &state.Repositories[i]
+			break
+		}
+	}
+	if repo == nil {
+		h.operationError(w, "Repositório não encontrado", http.StatusNotFound)
+		return
+	}
+
+	identityFile := ""
+	for _, acc := range state.Accounts {
+		if acc.ID == repo.AccountID {
+			for _, k := range state.Keys {
+				if k.ID == acc.KeyID {
+					identityFile = k.PrivateKeyPath
+					break
+				}
+			}
+			if identityFile == "" {
+				identityFile = acc.IdentityFile
+			}
+			break
+		}
+	}
+
+	job := &GitOpJob{ID: newID()}
+	h.pullMu.Lock()
+	h.pullJobs[job.ID] = job
+	h.pullMu.Unlock()
+
+	localPath := repo.LocalPath
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+		defer cancel()
+		svc := igit.NewService()
+		output, pullErr := svc.Pull(ctx, localPath, identityFile)
+		h.pullMu.Lock()
+		job.Output = output
+		if pullErr != nil {
+			job.Done, job.OK = true, false
+			job.Error = app.FriendlyMessage(pullErr)
+		} else {
+			job.Done, job.OK = true, true
+		}
+		h.pullMu.Unlock()
+	}()
+
+	h.render(w, "repos/pull-progress.html", map[string]any{
+		"ID": job.ID, "Done": false, "RepoID": id,
+	})
+}
+
+func (h *Handler) PullJobStatus(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	jobID := chi.URLParam(r, "jobId")
+	repoID := r.URL.Query().Get("repoId")
+
+	h.pullMu.Lock()
+	job, ok := h.pullJobs[jobID]
+	var done, jobOK bool
+	var errMsg, output string
+	if ok {
+		done, jobOK = job.Done, job.OK
+		errMsg, output = job.Error, job.Output
+	}
+	h.pullMu.Unlock()
+
+	if !ok {
+		h.render(w, "repos/pull-progress.html", map[string]any{
+			"Done": true, "OK": false, "ID": jobID, "RepoID": repoID,
+			"Error": "Job não encontrado.",
+		})
+		return
+	}
+	if done {
+		if jobOK {
+			w.Header().Set("HX-Trigger", `{"showToast":{"msg":"Pull concluído!","type":"success"}}`)
+		} else {
+			h.errorToast(w, errMsg)
+		}
+		w.WriteHeader(286)
+	}
+	h.render(w, "repos/pull-progress.html", map[string]any{
+		"ID":     jobID,
+		"RepoID": repoID,
+		"Done":   done,
+		"OK":     jobOK,
+		"Error":  errMsg,
+		"Output": output,
+	})
+}
+
+// ── New Branch ────────────────────────────────────────────────────
+
+func (h *Handler) NewBranchHandler(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	id := chi.URLParam(r, "id")
+	if err := r.ParseForm(); err != nil {
+		h.operationError(w, "Formulário inválido", http.StatusBadRequest)
+		return
+	}
+	branch := strings.TrimSpace(r.FormValue("branch"))
+	if branch == "" {
+		h.operationError(w, "Nome do branch é obrigatório", http.StatusBadRequest)
+		return
+	}
+
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+	var localPath string
+	for _, repo := range state.Repositories {
+		if repo.ID == id {
+			localPath = repo.LocalPath
+			break
+		}
+	}
+	if localPath == "" {
+		h.operationError(w, "Repositório não encontrado", http.StatusNotFound)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	svc := igit.NewService()
+	if err := svc.NewBranch(ctx, localPath, branch); err != nil {
+		h.errorToast(w, "Erro ao criar branch: "+err.Error())
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	h.successToastOnly(w, "Branch '"+branch+"' criado e ativo!")
+}
+
+// ── Repo Tabs ─────────────────────────────────────────────────────
+
+func (h *Handler) GetRepoTab(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	id := chi.URLParam(r, "id")
+	tab := chi.URLParam(r, "tab")
+
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+
+	var repo *storage.Repository
+	for i := range state.Repositories {
+		if state.Repositories[i].ID == id {
+			repo = &state.Repositories[i]
+			break
+		}
+	}
+	if repo == nil {
+		h.operationError(w, "Repositório não encontrado", http.StatusNotFound)
+		return
+	}
+
+	svc := igit.NewService()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	switch tab {
+	case "overview":
+		commits, _ := svc.GetLog(ctx, repo.LocalPath, 1, 0)
+		var lastCommit *igit.CommitEntry
+		if len(commits) > 0 {
+			lastCommit = &commits[0]
+		}
+		h.render(w, "repos/tab-overview.html", map[string]any{
+			"Repo":       repo,
+			"LastCommit": lastCommit,
+		})
+	case "config":
+		cfg, _ := svc.GetRepoGitConfig(repo.LocalPath)
+		h.render(w, "repos/tab-config.html", map[string]any{
+			"Repo":       repo,
+			"GitConfig":  cfg,
+			"Identities": state.Identities,
+		})
+	case "commits":
+		offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+		commits, _ := svc.GetLog(ctx, repo.LocalPath, 20, offset)
+		h.render(w, "repos/tab-commits.html", map[string]any{
+			"Repo":    repo,
+			"Commits": commits,
+			"Offset":  offset + 20,
+			"HasMore": len(commits) == 20,
+		})
+	default:
+		h.operationError(w, "Tab desconhecida", http.StatusBadRequest)
+	}
+}
+
+func (h *Handler) SetRepoGitConfigHandler(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	id := chi.URLParam(r, "id")
+	if err := r.ParseForm(); err != nil {
+		h.operationError(w, "Formulário inválido", http.StatusBadRequest)
+		return
+	}
+
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+	var localPath string
+	for _, repo := range state.Repositories {
+		if repo.ID == id {
+			localPath = repo.LocalPath
+			break
+		}
+	}
+	if localPath == "" {
+		h.operationError(w, "Repositório não encontrado", http.StatusNotFound)
+		return
+	}
+
+	svc := igit.NewService()
+	kvs := map[string]string{
+		"user.name":  strings.TrimSpace(r.FormValue("userName")),
+		"user.email": strings.TrimSpace(r.FormValue("userEmail")),
+	}
+	if v := strings.TrimSpace(r.FormValue("gpgFormat")); v != "" {
+		kvs["gpg.format"] = v
+	}
+	if v := strings.TrimSpace(r.FormValue("signingKey")); v != "" {
+		kvs["user.signingkey"] = v
+	}
+	if v := strings.TrimSpace(r.FormValue("commitGpgSign")); v == "true" || v == "1" {
+		kvs["commit.gpgsign"] = "true"
+	}
+
+	for k, v := range kvs {
+		if v == "" {
+			continue
+		}
+		if err := svc.SetRepoGitConfig(localPath, k, v); err != nil {
+			h.errorToast(w, "Erro ao salvar "+k+": "+err.Error())
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			return
+		}
+	}
+	h.successToastOnly(w, "Configuração git local salva!")
+}
+
+func (h *Handler) OpenRepoTerminal(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	id := chi.URLParam(r, "id")
+
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+	var localPath string
+	for _, repo := range state.Repositories {
+		if repo.ID == id {
+			localPath = repo.LocalPath
+			break
+		}
+	}
+	if localPath == "" {
+		h.operationError(w, "Repositório não encontrado", http.StatusNotFound)
+		return
+	}
+
+	if err := igit.OpenTerminalAt(localPath); err != nil {
+		h.errorToast(w, err.Error())
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+	h.successToastOnly(w, "Terminal aberto!")
+}
+
 // ── Helpers internos ──────────────────────────────────────────────
 
 func fetchRepoStatus(localPath string) (branch, statusShort string, isClean, accessible bool) {
@@ -319,18 +722,15 @@ func fetchRepoStatus(localPath string) (branch, statusShort string, isClean, acc
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 	defer cancel()
 
-	// Branch atual
 	branchOut, err := exec.CommandContext(ctx, "git", "-C", localPath, "branch", "--show-current").Output()
 	if err == nil {
 		branch = strings.TrimSpace(string(branchOut))
 	}
 	if branch == "" {
-		// Pode estar em modo detached HEAD
 		hashOut, _ := exec.CommandContext(ctx, "git", "-C", localPath, "rev-parse", "--short", "HEAD").Output()
 		branch = "HEAD:" + strings.TrimSpace(string(hashOut))
 	}
 
-	// Status curto
 	statusOut, err := exec.CommandContext(ctx, "git", "-C", localPath, "status", "--short").Output()
 	if err == nil {
 		statusStr := strings.TrimSpace(string(statusOut))

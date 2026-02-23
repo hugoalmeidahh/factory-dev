@@ -1,6 +1,7 @@
 // ── Utilitário: detecta a página atual pela URL ─────────────────
 function inferPage() {
   const p = window.location.pathname
+  if (p.startsWith('/tools/keys')) return 'keys'
   if (p === '/' || p.startsWith('/tools/ssh')) return 'ssh'
   if (p.startsWith('/tools/repos')) return 'repos'
   if (p.startsWith('/doctor')) return 'doctor'

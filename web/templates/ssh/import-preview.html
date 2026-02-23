@@ -1,0 +1,40 @@
+{{define "ssh/import-preview.html"}}
+{{if .Error}}
+<div class="fdev-info-box" style="background:#fdebec;border-color:#e1a0a0;color:#7a1e1e;margin-top:12px">
+  {{.Error}}
+</div>
+{{else if eq (len .Blocks) 0}}
+<div class="fdev-info-box" style="margin-top:12px">
+  Nenhum bloco Host externo encontrado em <code>{{.ConfigPath}}</code>.
+</div>
+{{else}}
+<form hx-post="/tools/ssh/import" hx-target="#main-content" style="margin-top:12px">
+  <input type="hidden" name="configPath" value="{{.ConfigPath}}">
+
+  <p style="font-size:13px;color:#5d5950;margin:0 0 8px">
+    {{len .Blocks}} bloco(s) encontrado(s). Selecione os que deseja importar:
+  </p>
+
+  <div class="fdev-list" style="gap:4px;margin-bottom:12px">
+    {{range .Blocks}}
+    <label class="fdev-key-type-option" style="cursor:pointer">
+      <input type="checkbox" name="selected" value="{{.HostAlias}}" checked style="accent-color:var(--accent)">
+      <div style="flex:1;min-width:0">
+        <strong>Host {{.HostAlias}}</strong>
+        <div style="font-size:12px;color:#5d5950;display:flex;gap:12px;flex-wrap:wrap">
+          {{if .HostName}}<span>→ {{.HostName}}</span>{{end}}
+          {{if .User}}<span>User: {{.User}}</span>{{end}}
+          {{if .IdentityFile}}<span style="font-family:monospace;font-size:11px">{{.IdentityFile}}</span>{{end}}
+        </div>
+      </div>
+    </label>
+    {{end}}
+  </div>
+
+  <div class="fdev-actions">
+    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Cancelar</button>
+    <button type="submit" class="fdev-btn">Importar Selecionadas</button>
+  </div>
+</form>
+{{end}}
+{{end}}

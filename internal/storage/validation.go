@@ -64,6 +64,23 @@ func Validate(a Account, existing []Account) []ValidationError {
 	return errs
 }
 
+// ValidateKey valida um Key antes de salvar.
+func ValidateKey(k Key) []ValidationError {
+	var errs []ValidationError
+
+	if strings.TrimSpace(k.Name) == "" {
+		errs = append(errs, ValidationError{Field: "name", Message: "obrigatório"})
+	}
+	if !validAliasRe.MatchString(k.Alias) {
+		errs = append(errs, ValidationError{Field: "alias", Message: "apenas letras minúsculas, números, - e _"})
+	}
+	validTypes := map[string]bool{"ed25519": true, "rsa": true, "ecdsa": true}
+	if !validTypes[k.Type] {
+		errs = append(errs, ValidationError{Field: "keyType", Message: "tipo inválido"})
+	}
+	return errs
+}
+
 // ValidateSimple valida apenas nome e alias (modo simples, sem config SSH completa).
 func ValidateSimple(a Account, existing []Account) []ValidationError {
 	var errs []ValidationError

@@ -45,8 +45,10 @@ func (p *Paths) KeyDir(alias string) string {
 // keyFileName retorna o nome do arquivo para cada tipo de chave.
 func keyFileName(keyType string) string {
 	switch keyType {
-	case "rsa4096":
+	case "rsa", "rsa4096":
 		return "id_rsa"
+	case "ecdsa":
+		return "id_ecdsa"
 	default: // "ed25519" ou ""
 		return "id_ed25519"
 	}

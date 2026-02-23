@@ -1,0 +1,92 @@
+{{define "keys/key-drawer.html"}}
+<form class="fdev-form"
+      hx-post="/tools/keys"
+      hx-target="#main-content"
+      x-data="{
+        keyType: '{{if .Key.Type}}{{.Key.Type}}{{else}}ed25519{{end}}',
+        showPass: false
+      }">
+
+  <label>Nome</label>
+  <input name="name" value="{{.Key.Name}}"
+         placeholder="Ex: GitHub Pessoal"
+         oninput="suggestKeyAlias(this)">
+  {{with index .Errors "name"}}<small class="err">{{.}}</small>{{end}}
+
+  <label>Alias <small style="color:#9c9890">(usado como nome do diretório ~/.fdev/keys/&lt;alias&gt;/)</small></label>
+  <input id="key-alias" name="alias" value="{{.Key.Alias}}"
+         placeholder="github-pessoal"
+         oninput="this.dataset.userEdited='1'">
+  {{with index .Errors "alias"}}<small class="err">{{.}}</small>{{end}}
+
+  <label>Tipo</label>
+  <div class="fdev-key-type-group">
+    <label class="fdev-key-type-option">
+      <input type="radio" name="keyType" value="ed25519" x-model="keyType" {{if eq .Key.Type "ed25519"}}checked{{end}} {{if eq .Key.Type ""}}checked{{end}}>
+      <div>
+        <strong>Ed25519</strong>
+        <small>Moderno, rápido, menor tamanho. Recomendado.</small>
+      </div>
+    </label>
+    <label class="fdev-key-type-option">
+      <input type="radio" name="keyType" value="rsa" x-model="keyType" {{if eq .Key.Type "rsa"}}checked{{end}}>
+      <div>
+        <strong>RSA</strong>
+        <small>Compatibilidade máxima. 2048–4096 bits.</small>
+      </div>
+    </label>
+    <label class="fdev-key-type-option">
+      <input type="radio" name="keyType" value="ecdsa" x-model="keyType" {{if eq .Key.Type "ecdsa"}}checked{{end}}>
+      <div>
+        <strong>ECDSA</strong>
+        <small>Curva elíptica. P-256, P-384 ou P-521.</small>
+      </div>
+    </label>
+  </div>
+  {{with index .Errors "keyType"}}<small class="err">{{.}}</small>{{end}}
+
+  <div x-show="keyType === 'rsa'">
+    <label>Bits (RSA)</label>
+    <select name="bits">
+      <option value="2048" {{if eq .Key.Bits 2048}}selected{{end}}>2048</option>
+      <option value="3072" {{if eq .Key.Bits 3072}}selected{{end}}>3072</option>
+      <option value="4096" {{if or (eq .Key.Bits 4096) (eq .Key.Bits 0)}}selected{{end}}>4096 (recomendado)</option>
+    </select>
+  </div>
+
+  <div x-show="keyType === 'ecdsa'">
+    <label>Curva (ECDSA)</label>
+    <select name="bits">
+      <option value="256" {{if or (eq .Key.Bits 256) (eq .Key.Bits 0)}}selected{{end}}>P-256</option>
+      <option value="384" {{if eq .Key.Bits 384}}selected{{end}}>P-384</option>
+      <option value="521" {{if eq .Key.Bits 521}}selected{{end}}>P-521</option>
+    </select>
+  </div>
+
+  <label>Comentário <small style="color:#9c9890">(opcional, aparece no .pub)</small></label>
+  <input name="comment" value="{{.Key.Comment}}" placeholder="Ex: usuario@maquina">
+
+  <label>
+    <input type="checkbox" x-model="showPass" style="accent-color:var(--accent)">
+    Proteger com passphrase
+  </label>
+  <div x-show="showPass" style="display:none">
+    <input type="password" name="passphrase" placeholder="Passphrase (não é salva)">
+    <small style="color:#9c9890">A passphrase não é armazenada. Será necessária para usar/exportar a chave privada.</small>
+  </div>
+
+  <div class="fdev-actions">
+    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Cancelar</button>
+    <button type="submit" class="fdev-btn">Gerar Chave</button>
+  </div>
+</form>
+
+<script>
+function suggestKeyAlias(input) {
+  const field = document.getElementById('key-alias')
+  if (field && !field.dataset.userEdited) {
+    field.value = input.value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ''
+  }
+}
+</script>
+{{end}}
