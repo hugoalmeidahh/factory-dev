@@ -97,6 +97,122 @@
 
     .nav-links a:hover { color: var(--cyan); }
 
+    /* ── Clone Modal ─────────────────────────────────────── */
+    #clone-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #clone-modal-overlay.open {
+      display: flex;
+    }
+
+    #clone-modal {
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      border-radius: 16px;
+      padding: 32px 36px;
+      width: 100%;
+      max-width: 520px;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+      animation: modalIn 0.22s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)     scale(1); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 20px;
+      background: none;
+      border: none;
+      color: var(--text3);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+
+    .modal-close:hover { color: var(--text); }
+
+    .clone-tab-bar {
+      display: flex;
+      gap: 4px;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+
+    .clone-tab {
+      flex: 1;
+      padding: 7px 0;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text3);
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .clone-tab.active {
+      background: var(--bg2);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+
+    .clone-url-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 20px;
+    }
+
+    .clone-url-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      user-select: all;
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+    .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
     /* ── Side Dots ───────────────────────────────────────── */
     #side-dots {
       position: fixed;
@@ -588,9 +704,57 @@
     <li><a href="#features">Features</a></li>
     <li><a href="#architecture">Arquitetura</a></li>
     <li><a href="#howto">Como Rodar</a></li>
+    <li><button onclick="openCloneModal()" class="btn btn--ghost" style="padding:8px 18px;font-size:13px">⎘ Clone / Fork</button></li>
     <li><a href="http://localhost:7337" target="_blank" class="btn btn--primary" style="padding:8px 20px;font-size:13px">Abrir App</a></li>
   </ul>
 </nav>
+
+<!-- ── Clone / Fork Modal ───────────────────────────── -->
+<div id="clone-modal-overlay" onclick="handleOverlayClick(event)">
+  <div id="clone-modal">
+    <button class="modal-close" onclick="closeCloneModal()">✕</button>
+
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:4px">Obter o FactoryDev</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:20px">
+      Clone o repositório ou faça um fork para contribuir.
+    </p>
+
+    <!-- Tab bar -->
+    <div class="clone-tab-bar">
+      <button class="clone-tab active" onclick="switchCloneTab('ssh',this)">SSH</button>
+      <button class="clone-tab"        onclick="switchCloneTab('https',this)">HTTPS</button>
+      <button class="clone-tab"        onclick="switchCloneTab('cli',this)">GitHub CLI</button>
+    </div>
+
+    <!-- URL row -->
+    <div class="clone-url-row">
+      <span class="clone-url-text" id="clone-url-text">git@github.com:hugoalmeidahh/factory-dev.git</span>
+      <button class="copy-btn" id="clone-copy-btn" onclick="copyCloneUrl()">Copiar</button>
+    </div>
+
+    <!-- Dica contextual -->
+    <div id="clone-hint" style="font-size:12px;color:var(--text3);margin-bottom:24px;font-family:'JetBrains Mono',monospace;line-height:1.8">
+      git clone git@github.com:hugoalmeidahh/factory-dev.git
+    </div>
+
+    <hr style="border:none;border-top:1px solid var(--border);margin-bottom:20px" />
+
+    <!-- Fork -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+      <div>
+        <p style="font-size:13px;font-weight:600;margin-bottom:2px">Fork no GitHub</p>
+        <p style="font-size:12px;color:var(--text2)">Cria uma cópia do repo na sua conta para contribuir.</p>
+      </div>
+      <a href="https://github.com/hugoalmeidahh/factory-dev/fork"
+         target="_blank"
+         class="btn btn--primary"
+         style="font-size:13px;padding:9px 20px;white-space:nowrap"
+         onclick="closeCloneModal()">
+        ⑂ Fork
+      </a>
+    </div>
+  </div>
+</div>
 
 <!-- ── Side Dots ────────────────────────────────────── -->
 <div id="side-dots"></div>
@@ -1539,6 +1703,65 @@
      SCRIPTS
 ══════════════════════════════════════════════════════ -->
 <script>
+  // ── Clone Modal ─────────────────────────────────
+  const cloneUrls = {
+    ssh:   'git@github.com:hugoalmeidahh/factory-dev.git',
+    https: 'https://github.com/hugoalmeidahh/factory-dev.git',
+    cli:   'gh repo clone hugoalmeidahh/factory-dev'
+  }
+
+  const cloneHints = {
+    ssh:   'git clone git@github.com:hugoalmeidahh/factory-dev.git',
+    https: 'git clone https://github.com/hugoalmeidahh/factory-dev.git',
+    cli:   'gh repo clone hugoalmeidahh/factory-dev'
+  }
+
+  let currentCloneTab = 'ssh'
+
+  function openCloneModal() {
+    document.getElementById('clone-modal-overlay').classList.add('open')
+    document.body.style.overflow = 'hidden'
+  }
+
+  function closeCloneModal() {
+    document.getElementById('clone-modal-overlay').classList.remove('open')
+    document.body.style.overflow = ''
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('clone-modal-overlay')) closeCloneModal()
+  }
+
+  function switchCloneTab(tab, btn) {
+    currentCloneTab = tab
+    document.querySelectorAll('.clone-tab').forEach(b => b.classList.remove('active'))
+    btn.classList.add('active')
+    document.getElementById('clone-url-text').textContent = cloneUrls[tab]
+    document.getElementById('clone-hint').textContent = cloneHints[tab]
+    // reset copy btn
+    const copyBtn = document.getElementById('clone-copy-btn')
+    copyBtn.textContent = 'Copiar'
+    copyBtn.classList.remove('copied')
+  }
+
+  function copyCloneUrl() {
+    const url = cloneUrls[currentCloneTab]
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById('clone-copy-btn')
+      btn.textContent = 'Copiado!'
+      btn.classList.add('copied')
+      setTimeout(() => {
+        btn.textContent = 'Copiar'
+        btn.classList.remove('copied')
+      }, 2000)
+    })
+  }
+
+  // Fechar com Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeCloneModal()
+  })
+
   // ── Repo tabs ───────────────────────────────────
   const repoDescContent = {
     overview: `
