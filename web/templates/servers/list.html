@@ -1,0 +1,81 @@
+{{define "servers/list.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Servers</h1>
+      <p>Gerencie conexões SSH para servidores remotos.</p>
+    </div>
+    <button class="fdev-btn"
+      hx-get="/tools/servers/new"
+      hx-target="#drawer-content">
+      Novo Servidor
+    </button>
+  </header>
+
+  {{if eq (len .Servers) 0}}
+  <div class="fdev-empty">
+    <h2>Nenhum servidor cadastrado</h2>
+    <p>Adicione servidores para conectar, enviar arquivos e testar via SSH.</p>
+    <button class="fdev-btn"
+      hx-get="/tools/servers/new"
+      hx-target="#drawer-content">
+      Novo Servidor
+    </button>
+  </div>
+  {{else}}
+  <div class="fdev-list">
+    {{range .Servers}}
+    <article class="fdev-list-card">
+      <div class="fdev-list-card-header">
+        <div class="fdev-list-card-info">
+          <h3 class="fdev-list-card-name">{{.Name}}</h3>
+          <p class="fdev-list-card-sub">
+            {{.User}}@{{.Host}}:{{.Port}}
+            {{if .KeyName}} · 🔑 {{.KeyName}}{{end}}
+            {{if .Description}} · {{.Description}}{{end}}
+          </p>
+        </div>
+        <div class="fdev-list-card-actions">
+          {{if .Tags}}
+          <div style="display:flex;gap:4px">
+            {{range .Tags}}<span class="fdev-tag">{{.}}</span>{{end}}
+          </div>
+          {{end}}
+          <button class="fdev-btn fdev-btn--sm"
+            hx-post="/tools/servers/{{.ID}}/connect"
+            title="Abrir terminal SSH">
+            ⌨ Conectar
+          </button>
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-post="/tools/servers/{{.ID}}/test"
+            hx-target="#server-progress-{{.ID}}"
+            hx-swap="innerHTML">
+            Testar
+          </button>
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-get="/tools/servers/{{.ID}}/send-file"
+            hx-target="#drawer-content">
+            Enviar Arquivo
+          </button>
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-get="/tools/servers/{{.ID}}/edit"
+            hx-target="#drawer-content">
+            Editar
+          </button>
+          <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+            hx-delete="/tools/servers/{{.ID}}"
+            hx-target="#main-content"
+            hx-confirm="Remover servidor {{.Name}}?">
+            Remover
+          </button>
+        </div>
+      </div>
+      <div id="server-progress-{{.ID}}" style="padding:0 16px 8px"></div>
+    </article>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "servers/list.html" .}}{{end}}

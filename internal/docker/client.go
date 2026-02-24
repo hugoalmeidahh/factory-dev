@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -14,6 +15,65 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/go-connections/nat"
 )
+
+// DaemonInfo contém informações do daemon Docker.
+type DaemonInfo struct {
+	Version           string
+	ContainersRunning int
+	ContainersStopped int
+	ContainersPaused  int
+	TotalMemMB        float64 // soma da memória usada pelos containers em execução
+}
+
+// GetDaemonInfo retorna informações do daemon e memória total dos containers.
+func (c *Client) GetDaemonInfo(ctx context.Context) (*DaemonInfo, error) {
+	info, err := c.cli.Info(ctx)
+	if err != nil {
+		return nil, err
+	}
+	d := &DaemonInfo{
+		Version:           info.ServerVersion,
+		ContainersRunning: info.ContainersRunning,
+		ContainersStopped: info.ContainersStopped,
+		ContainersPaused:  info.ContainersPaused,
+	}
+
+	// Agrega memória dos containers em execução (máx 10 para não travar)
+	if info.ContainersRunning > 0 {
+		list, err := c.cli.ContainerList(ctx, container.ListOptions{})
+		if err == nil {
+			limit := len(list)
+			if limit > 10 {
+				limit = 10
+			}
+			var totalMem float64
+			for _, ct := range list[:limit] {
+				statsResp, err := c.cli.ContainerStats(ctx, ct.ID, false)
+				if err != nil {
+					continue
+				}
+				data, _ := io.ReadAll(io.LimitReader(statsResp.Body, 8192))
+				statsResp.Body.Close()
+				totalMem += parseMemUsageBytes(data)
+			}
+			d.TotalMemMB = totalMem / 1024 / 1024
+		}
+	}
+	return d, nil
+}
+
+// parseMemUsageBytes extrai memory_stats.usage do JSON de stats do Docker.
+func parseMemUsageBytes(data []byte) float64 {
+	var s struct {
+		MemoryStats struct {
+			Usage uint64 `json:"usage"`
+		} `json:"memory_stats"`
+	}
+	if err := json.Unmarshal(data, &s); err != nil {
+		return 0
+	}
+	return float64(s.MemoryStats.Usage)
+}
 
 type Client struct {
 	cli *dockerclient.Client

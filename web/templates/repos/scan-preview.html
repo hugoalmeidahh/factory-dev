@@ -1,0 +1,34 @@
+{{define "repos/scan-preview.html"}}
+{{if eq (len .Candidates) 0}}
+<div class="fdev-empty" style="padding:16px">
+  <p>Nenhum repositório git encontrado no caminho informado.</p>
+</div>
+{{else}}
+<p style="font-size:13px;color:#5d5950;margin:0 0 10px">
+  {{.Total}} repositório(s) encontrado(s). Selecione os que deseja importar:
+</p>
+<form class="fdev-form"
+  hx-post="/tools/repos/scan/import"
+  hx-target="#main-content"
+  hx-push-url="/tools/repos">
+  <div style="display:grid;gap:6px;max-height:340px;overflow-y:auto;padding:2px">
+    {{range .Candidates}}
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:{{if .AlreadyInUse}}#fafaf8{{else}}#fff{{end}}">
+      <input type="checkbox" name="repoPaths" value="{{.Path}}"
+        {{if not .AlreadyInUse}}checked{{end}}
+        {{if .AlreadyInUse}}disabled{{end}}>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600">{{.Name}}</div>
+        <div style="font-size:12px;color:#5d5950;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{.Path}}</div>
+      </div>
+      {{if .AlreadyInUse}}<span class="fdev-pill ok" style="font-size:11px">já gerenciado</span>{{end}}
+    </label>
+    {{end}}
+  </div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+    <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+    <button class="fdev-btn" type="submit">Importar Selecionados</button>
+  </div>
+</form>
+{{end}}
+{{end}}

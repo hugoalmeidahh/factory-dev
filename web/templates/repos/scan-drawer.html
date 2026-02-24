@@ -1,0 +1,22 @@
+{{define "repos/scan-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>Escanear Repositórios</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body">
+  <p style="color:#5d5950;font-size:14px;margin:0 0 16px">
+    Busca repositórios git em um diretório (até 3 níveis de profundidade).
+  </p>
+  <form class="fdev-form" style="margin-bottom:16px"
+    hx-post="/tools/repos/scan/validate"
+    hx-target="#scan-preview-slot"
+    hx-swap="innerHTML">
+    <label style="font-size:14px;font-weight:600">Diretório raiz</label>
+    <input type="text" name="scanPath" value="{{.DefaultPath}}"
+      placeholder="ex: /Users/você/projetos"
+      style="font-family:monospace" required>
+    <button class="fdev-btn" type="submit">Escanear</button>
+  </form>
+  <div id="scan-preview-slot"></div>
+</div>
+{{end}}

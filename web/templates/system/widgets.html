@@ -1,0 +1,93 @@
+{{define "system/widgets.html"}}
+{{if not .Info}}
+<div class="fdev-empty" style="padding:16px">Dados do sistema indisponíveis.</div>
+{{else}}
+<div style="display:grid;gap:16px">
+
+  <!-- CPU -->
+  <div class="fdev-stat-card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">
+      CPU — {{printf "%.1f" .Info.CPU.Overall}}% overall ({{.Info.CPU.Cores}} cores)
+    </div>
+    <div class="fdev-progress-bar-wrap">
+      <div class="fdev-progress-bar" style="width:{{printf "%.0f" .Info.CPU.Overall}}%"></div>
+    </div>
+    {{if gt (len .Info.CPU.Percent) 1}}
+    <div class="fdev-stat-grid" style="margin-top:10px">
+      {{range $i, $p := .Info.CPU.Percent}}
+      <div>
+        <span class="fdev-stat-label">Core {{$i}}</span>
+        <div class="fdev-progress-bar-wrap fdev-progress-bar-wrap--sm">
+          <div class="fdev-progress-bar fdev-progress-bar--sm" style="width:{{printf "%.0f" $p}}%"></div>
+        </div>
+        <span style="font-size:11px;color:#5d5950">{{printf "%.1f" $p}}%</span>
+      </div>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+
+  <!-- Memória -->
+  <div class="fdev-stat-card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">
+      Memória RAM — {{printf "%.1f" .Info.Mem.Percent}}%
+      ({{printf "%.1f" (mb .Info.Mem.Used)}} / {{printf "%.1f" (mb .Info.Mem.Total)}} MB)
+    </div>
+    <div class="fdev-progress-bar-wrap">
+      <div class="fdev-progress-bar" style="width:{{printf "%.0f" .Info.Mem.Percent}}%"></div>
+    </div>
+    {{if gt .Info.Mem.SwapTotal 0}}
+    <div style="margin-top:10px;font-size:12px;color:#5d5950">
+      Swap: {{printf "%.0f" (mb .Info.Mem.SwapUsed)}} / {{printf "%.0f" (mb .Info.Mem.SwapTotal)}} MB
+    </div>
+    {{end}}
+  </div>
+
+  <!-- Discos -->
+  {{if .Info.Disks}}
+  <div class="fdev-stat-card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Discos</div>
+    <table class="fdev-table" style="font-size:13px">
+      <thead><tr><th>Mount</th><th>Usado</th><th>Total</th><th style="width:120px">%</th></tr></thead>
+      <tbody>
+        {{range .Info.Disks}}
+        <tr>
+          <td style="font-family:monospace;font-size:12px">{{.Mount}}</td>
+          <td>{{printf "%.1f" (gb .Used)}} GB</td>
+          <td>{{printf "%.1f" (gb .Total)}} GB</td>
+          <td>
+            <div class="fdev-progress-bar-wrap fdev-progress-bar-wrap--sm">
+              <div class="fdev-progress-bar fdev-progress-bar--sm {{if gt .Percent 90.0}}fdev-progress-bar--danger{{end}}"
+                style="width:{{printf "%.0f" .Percent}}%"></div>
+            </div>
+            <span style="font-size:11px;color:#5d5950">{{printf "%.0f" .Percent}}%</span>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+  <!-- Rede -->
+  {{if .Info.Nets}}
+  <div class="fdev-stat-card">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px">Rede</div>
+    <table class="fdev-table" style="font-size:13px">
+      <thead><tr><th>Interface</th><th>Enviado</th><th>Recebido</th></tr></thead>
+      <tbody>
+        {{range .Info.Nets}}
+        <tr>
+          <td style="font-family:monospace">{{.Name}}</td>
+          <td>{{printf "%.1f" (mb .BytesSent)}} MB</td>
+          <td>{{printf "%.1f" (mb .BytesRecv)}} MB</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+</div>
+{{end}}
+{{end}}

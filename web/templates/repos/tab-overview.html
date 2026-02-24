@@ -1,0 +1,43 @@
+{{define "repos/tab-overview.html"}}
+<div class="fdev-tab-content">
+  {{if .LastCommit}}
+  <div class="fdev-stat-card" style="margin-bottom:12px">
+    <div style="font-size:12px;color:#5d5950;margin-bottom:4px">Último commit</div>
+    <div style="font-size:14px;font-weight:600">{{.LastCommit.Subject}}</div>
+    <div style="font-size:12px;color:#5d5950;margin-top:2px">
+      <code style="font-family:monospace;background:#f0ede5;padding:1px 5px;border-radius:4px">{{.LastCommit.Hash}}</code>
+      · {{.LastCommit.Author}} · {{.LastCommit.Date}}
+    </div>
+  </div>
+  {{end}}
+
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+    <!-- Pull -->
+    <div>
+      <button class="fdev-btn fdev-btn--sm"
+        hx-post="/tools/repos/{{.Repo.ID}}/pull"
+        hx-target="#pull-slot-{{.Repo.ID}}"
+        hx-swap="innerHTML">
+        ⇩ Pull
+      </button>
+    </div>
+    <!-- Open terminal -->
+    <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+      hx-post="/tools/repos/{{.Repo.ID}}/terminal">
+      ⌨ Terminal
+    </button>
+  </div>
+
+  <div id="pull-slot-{{.Repo.ID}}"></div>
+
+  <!-- New branch -->
+  <form class="fdev-form" style="margin-top:8px"
+    hx-post="/tools/repos/{{.Repo.ID}}/branch">
+    <label style="font-size:13px;font-weight:600">Novo branch</label>
+    <div style="display:flex;gap:6px">
+      <input type="text" name="branch" placeholder="nome-do-branch" style="flex:1">
+      <button class="fdev-btn fdev-btn--sm" type="submit">Criar</button>
+    </div>
+  </form>
+</div>
+{{end}}

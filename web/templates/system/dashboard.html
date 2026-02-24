@@ -1,0 +1,45 @@
+{{define "system/dashboard.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>System Info</h1>
+      <p>Informações do sistema — atualiza automaticamente a cada 5s.</p>
+    </div>
+    {{if .Info}}
+    <form class="fdev-form" style="flex-direction:row;align-items:center;gap:8px;margin:0"
+      hx-post="/tools/system/hostname"
+      hx-swap="none">
+      <input type="text" name="hostname"
+        value="{{.Info.Hostname}}"
+        placeholder="hostname"
+        style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;width:200px">
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="submit">Salvar Hostname</button>
+    </form>
+    {{end}}
+  </header>
+
+  {{if .Info}}
+  <div class="fdev-stat-card" style="margin-bottom:16px">
+    <div class="fdev-stat-grid">
+      <div><span class="fdev-stat-label">OS</span><strong>{{.Info.OS}}</strong></div>
+      <div><span class="fdev-stat-label">Kernel</span><strong>{{.Info.Kernel}}</strong></div>
+      <div><span class="fdev-stat-label">Uptime</span><strong>{{.Info.Uptime}}</strong></div>
+      <div><span class="fdev-stat-label">Goroutines</span><strong>{{.Info.GoroutineCount}}</strong></div>
+      <div><span class="fdev-stat-label">Go Heap</span><strong>{{printf "%.1f" .Info.GoMemAllocMB}} MB</strong></div>
+    </div>
+  </div>
+  {{end}}
+
+  <div id="system-widgets"
+    hx-get="/tools/system/widgets"
+    hx-trigger="load, every 5s"
+    hx-swap="innerHTML">
+    <div class="fdev-clone-running">
+      <span class="fdev-spinner"></span>
+      Carregando dados do sistema…
+    </div>
+  </div>
+</section>
+{{end}}
+
+{{define "content"}}{{template "system/dashboard.html" .}}{{end}}

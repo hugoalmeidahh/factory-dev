@@ -163,6 +163,39 @@ body { margin: 0; font-family: "IBM Plex Sans", sans-serif; color: var(--ink); b
 .fdev-key-usage { font-size: 12px; color: #5d5950; }
 .fdev-key-usage--used { color: #0d6c4f; }
 
+/* ── Tabs ───────────────────────────────────────────────────── */
+.fdev-tab-bar { display: flex; border-bottom: 1px solid var(--border); background: #f7f3e9; padding: 0 16px; }
+.fdev-tab-btn { border: none; background: transparent; padding: 8px 14px; font-size: 13px; color: #5d5950; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
+.fdev-tab-btn:hover { color: var(--accent); }
+.fdev-tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.fdev-tab-content { padding: 14px 16px; }
+
+/* ── Progress bars (System) ─────────────────────────────────── */
+.fdev-progress-bar-wrap { background: #e8e4d4; border-radius: 999px; height: 10px; overflow: hidden; }
+.fdev-progress-bar-wrap--sm { height: 6px; }
+.fdev-progress-bar { background: var(--accent); height: 100%; border-radius: 999px; transition: width .3s ease; min-width: 2px; }
+.fdev-progress-bar--sm { background: var(--accent); }
+.fdev-progress-bar--danger { background: var(--danger); }
+
+/* ── Stat cards/grid (System) ───────────────────────────────── */
+.fdev-stat-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: #fff; }
+.fdev-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.fdev-stat-label { display: block; font-size: 11px; color: #9c9890; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+
+/* ── Docker status badges ───────────────────────────────────── */
+.fdev-docker-status { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+.fdev-docker-status--running { background: #e7f7f0; color: #0d6c4f; border-color: #93d8bd; }
+.fdev-docker-status--exited  { background: #f4f3ef; color: #5d5950;  border-color: #d7d2c4; }
+.fdev-docker-status--created { background: #fff3e5; color: #8a5a10;  border-color: #e1bf8f; }
+.fdev-docker-status--dead    { background: #fdebec; color: #7a1e1e;  border-color: #e1a0a0; }
+.fdev-docker-status--paused  { background: #f0eaf8; color: #6b3fa0;  border-color: #c9a9e8; }
+
+/* ── Server tags ────────────────────────────────────────────── */
+.fdev-tag { padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #f0f0ea; border: 1px solid var(--border); color: #5d5950; }
+
+/* ── [x-cloak] — esconde elementos Alpine antes de montar ───── */
+[x-cloak] { display: none !important; }
+
 @media (max-width: 900px) {
   .fdev-body { grid-template-columns: 1fr; }
   .fdev-sidebar { position: sticky; top: 0; z-index: 4; }

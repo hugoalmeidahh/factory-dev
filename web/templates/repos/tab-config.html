@@ -1,0 +1,36 @@
+{{define "repos/tab-config.html"}}
+<div class="fdev-tab-content">
+  <form class="fdev-form"
+    hx-post="/tools/repos/{{.Repo.ID}}/git-config">
+    <label style="font-size:13px;font-weight:600">user.name</label>
+    <input type="text" name="userName"
+      value="{{index .GitConfig "user.name"}}"
+      placeholder="Seu Nome">
+
+    <label style="font-size:13px;font-weight:600">user.email</label>
+    <input type="text" name="userEmail"
+      value="{{index .GitConfig "user.email"}}"
+      placeholder="voce@email.com">
+
+    {{if .Identities}}
+    <label style="font-size:13px;font-weight:600">Aplicar identidade</label>
+    <select name="identityID" style="border:1px solid var(--border);border-radius:8px;padding:8px">
+      <option value="">— selecionar identidade —</option>
+      {{range .Identities}}
+      <option value="{{.ID}}">{{.Name}} &lt;{{.Email}}&gt;</option>
+      {{end}}
+    </select>
+    {{end}}
+
+    <button class="fdev-btn fdev-btn--sm" type="submit">Salvar Config Local</button>
+  </form>
+
+  {{if .GitConfig}}
+  <details style="margin-top:16px">
+    <summary style="font-size:13px;color:#5d5950;cursor:pointer">Ver config raw</summary>
+    <pre style="font-size:11px;font-family:monospace;background:#f7f3e9;padding:10px;border-radius:8px;margin-top:6px;overflow:auto;max-height:200px">{{range $k,$v := .GitConfig}}{{$k}} = {{$v}}
+{{end}}</pre>
+  </details>
+  {{end}}
+</div>
+{{end}}

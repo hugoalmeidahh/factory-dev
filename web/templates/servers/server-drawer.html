@@ -1,0 +1,65 @@
+{{define "servers/server-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>{{if .IsEdit}}Editar Servidor{{else}}Novo Servidor{{end}}</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body">
+  <form class="fdev-form"
+    hx-post="{{.SubmitURL}}"
+    hx-target="#main-content"
+    hx-push-url="/tools/servers">
+
+    <label style="font-size:14px;font-weight:600">Nome *</label>
+    <input type="text" name="name"
+      value="{{if .Server}}{{.Server.Name}}{{end}}"
+      placeholder="ex: Servidor de Produção" required>
+
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
+      <div>
+        <label style="font-size:14px;font-weight:600">Host *</label>
+        <input type="text" name="host"
+          value="{{if .Server}}{{.Server.Host}}{{end}}"
+          placeholder="ex: 192.168.1.1 ou meuservidor.com" required
+          style="width:100%">
+      </div>
+      <div>
+        <label style="font-size:14px;font-weight:600">Porta</label>
+        <input type="number" name="port"
+          value="{{if .Server}}{{.Server.Port}}{{else}}22{{end}}"
+          min="1" max="65535" style="width:80px">
+      </div>
+    </div>
+
+    <label style="font-size:14px;font-weight:600">Usuário *</label>
+    <input type="text" name="user"
+      value="{{if .Server}}{{.Server.User}}{{end}}"
+      placeholder="ex: ubuntu, root, deploy" required>
+
+    <label style="font-size:14px;font-weight:600">Chave SSH</label>
+    <select name="keyID" style="border:1px solid var(--border);border-radius:8px;padding:8px">
+      <option value="">— nenhuma (usa agent SSH) —</option>
+      {{range .Keys}}
+      <option value="{{.ID}}"
+        {{if and $.Server (eq $.Server.KeyID .ID)}}selected{{end}}>
+        {{.Name}} ({{.Type}})
+      </option>
+      {{end}}
+    </select>
+
+    <label style="font-size:14px;font-weight:600">Descrição</label>
+    <input type="text" name="description"
+      value="{{if .Server}}{{.Server.Description}}{{end}}"
+      placeholder="ex: Servidor web principal">
+
+    <label style="font-size:14px;font-weight:600">Tags</label>
+    <input type="text" name="tags"
+      value="{{if .Server}}{{join .Server.Tags ","}}{{end}}"
+      placeholder="ex: produção, web, aws (separadas por vírgula)">
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+      <button class="fdev-btn" type="submit">{{if .IsEdit}}Salvar{{else}}Criar{{end}}</button>
+    </div>
+  </form>
+</div>
+{{end}}

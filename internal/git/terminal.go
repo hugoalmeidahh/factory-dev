@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 )
 
 // terminalCandidate representa um emulador de terminal e como passar o diretório de trabalho.
@@ -13,9 +14,13 @@ type terminalCandidate struct {
 }
 
 // OpenTerminalAt abre um emulador de terminal no diretório path.
-// Detecta o terminal em ordem: $TERMINAL, gnome-terminal, xterm, konsole,
-// xfce4-terminal, alacritty, kitty.
+// No macOS usa Terminal.app ou iTerm2 via osascript. No Linux detecta em ordem:
+// $TERMINAL, gnome-terminal, xterm, konsole, xfce4-terminal, alacritty, kitty.
 func OpenTerminalAt(path string) error {
+	if runtime.GOOS == "darwin" {
+		return openTerminalMacOS(path, "")
+	}
+
 	candidates := []terminalCandidate{
 		{os.Getenv("TERMINAL"), "--working-directory"},
 		{"gnome-terminal", "--working-directory"},
@@ -36,7 +41,6 @@ func OpenTerminalAt(path string) error {
 		}
 		var cmd *exec.Cmd
 		if c.bin == "xterm" {
-			// xterm não suporta --working-directory; usa bash com cd
 			cmd = exec.Command(binPath, "-e", "bash", "-c", "cd "+path+" && exec bash")
 		} else {
 			cmd = exec.Command(binPath, c.flag, path)
@@ -50,9 +54,17 @@ func OpenTerminalAt(path string) error {
 
 // OpenTerminalWithCmd abre um terminal executando um comando específico (ex: ssh user@host).
 func OpenTerminalWithCmd(cmdBin string, args ...string) error {
+	if runtime.GOOS == "darwin" {
+		fullCmd := cmdBin
+		for _, a := range args {
+			fullCmd += " " + a
+		}
+		return openTerminalMacOS("", fullCmd)
+	}
+
 	termCandidates := []struct {
 		bin     string
-		execArg string // flag para passar comando a executar
+		execArg string
 	}{
 		{os.Getenv("TERMINAL"), "-e"},
 		{"gnome-terminal", "--"},
@@ -84,4 +96,24 @@ func OpenTerminalWithCmd(cmdBin string, args ...string) error {
 		return cmd.Start()
 	}
 	return fmt.Errorf("nenhum terminal encontrado; defina a variável $TERMINAL")
+}
+
+// openTerminalMacOS abre Terminal.app (com fallback para iTerm2) via osascript.
+// Se dir for não-vazio, abre no diretório; se shellCmd for não-vazio, executa o comando.
+func openTerminalMacOS(dir, shellCmd string) error {
+	var script string
+	if shellCmd != "" {
+		script = fmt.Sprintf(`tell application "Terminal"
+  activate
+  do script %q
+end tell`, shellCmd)
+	} else {
+		script = fmt.Sprintf(`tell application "Terminal"
+  activate
+  do script "cd %s && clear"
+end tell`, dir)
+	}
+
+	cmd := exec.Command("osascript", "-e", script)
+	return cmd.Start()
 }

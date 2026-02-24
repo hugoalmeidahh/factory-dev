@@ -1,0 +1,58 @@
+{{define "docker/container-detail.html"}}
+<div class="fdev-drawer-header">
+  <h2>Container: {{if .Container}}{{.Container.Name}}{{else}}{{.ID}}{{end}}</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body" x-data="{tab:'{{.Tab}}'}">
+  <div class="fdev-tab-bar" style="margin-bottom:16px">
+    <button class="fdev-tab-btn" :class="{active:tab==='details'}"
+      @click="tab='details'"
+      hx-get="/tools/docker/containers/{{.ID}}?tab=details"
+      hx-target="closest .fdev-drawer-body"
+      hx-swap="innerHTML">
+      Detalhes
+    </button>
+    <button class="fdev-tab-btn" :class="{active:tab==='logs'}"
+      @click="tab='logs'"
+      hx-get="/tools/docker/containers/{{.ID}}/logs"
+      hx-target="closest .fdev-drawer-body"
+      hx-swap="innerHTML">
+      Logs
+    </button>
+  </div>
+
+  {{if eq .Tab "logs"}}
+  <div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:13px;color:#5d5950">Últimas 200 linhas</span>
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+        hx-get="/tools/docker/containers/{{.ID}}/logs"
+        hx-target="closest .fdev-drawer-body"
+        hx-swap="innerHTML">
+        ↻ Atualizar
+      </button>
+    </div>
+    <pre style="font-size:11px;font-family:monospace;background:#1d1b16;color:#e8e4d4;padding:12px;border-radius:8px;max-height:500px;overflow:auto;white-space:pre-wrap;word-break:break-all">{{.Logs}}</pre>
+  </div>
+  {{else}}
+  {{if .Container}}
+  <div class="fdev-stat-grid" style="margin-bottom:16px">
+    <div><span class="fdev-stat-label">ID</span><code style="font-family:monospace;font-size:12px">{{.ID}}</code></div>
+    <div><span class="fdev-stat-label">Status</span><strong>{{.Container.State.Status}}</strong></div>
+    {{if .Container.Config}}
+    <div><span class="fdev-stat-label">Imagem</span><strong>{{.Container.Config.Image}}</strong></div>
+    {{end}}
+  </div>
+  {{if .Container.Config}}
+  {{if .Container.Config.Env}}
+  <div style="margin-bottom:12px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:6px">Variáveis de Ambiente</div>
+    <pre style="font-size:11px;font-family:monospace;background:#f7f3e9;padding:10px;border-radius:8px;max-height:200px;overflow:auto">{{range .Container.Config.Env}}{{.}}
+{{end}}</pre>
+  </div>
+  {{end}}
+  {{end}}
+  {{end}}
+  {{end}}
+</div>
+{{end}}

@@ -1,0 +1,73 @@
+{{define "docker/template-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>Lançar Container</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body">
+  <p style="font-size:13px;color:#5d5950;margin:0 0 12px">Selecione um template e ajuste conforme necessário:</p>
+
+  <!-- Template selector (sem Alpine, usa radio + JS simples) -->
+  <div class="fdev-key-type-group" style="margin-bottom:16px" id="tmpl-selector">
+    {{range .Templates}}
+    <label class="fdev-key-type-option"
+      onclick="fillDockerTemplate({{.ID | printf "%q"}}, {{.Image | printf "%q"}}, {{.DefaultPort | printf "%q"}}, {{join .DefaultEnv "\n" | printf "%q"}})">
+      <input type="radio" name="_tmplSelect" value="{{.ID}}">
+      <div>
+        <strong>{{.Name}}</strong>
+        <small>{{.Image}} · {{.Description}}</small>
+      </div>
+    </label>
+    {{end}}
+    <label class="fdev-key-type-option">
+      <input type="radio" name="_tmplSelect" value="custom" checked
+        onclick="fillDockerTemplate('custom','','','')">
+      <div><strong>Personalizado</strong><small>Configure manualmente</small></div>
+    </label>
+  </div>
+
+  <form class="fdev-form" id="docker-launch-form"
+    hx-post="/tools/docker/templates"
+    hx-target="#main-content"
+    hx-push-url="/tools/docker">
+    <input type="hidden" name="templateID" id="docker-tmpl-id" value="">
+
+    <label style="font-size:14px;font-weight:600">Nome do container</label>
+    <input type="text" name="name" id="docker-name" placeholder="ex: meu-postgres" required>
+
+    <label style="font-size:14px;font-weight:600">Imagem *</label>
+    <input type="text" name="image" id="docker-image" placeholder="ex: postgres:16-alpine" required style="font-family:monospace">
+
+    <label style="font-size:14px;font-weight:600">Porta (host:container)</label>
+    <input type="text" name="port" id="docker-port" placeholder="ex: 5432:5432" style="font-family:monospace">
+
+    <label style="font-size:14px;font-weight:600">Variáveis de ambiente</label>
+    <textarea name="env" id="docker-env" rows="4"
+      placeholder="POSTGRES_PASSWORD=postgres&#10;POSTGRES_DB=app"
+      style="font-family:monospace;border:1px solid var(--border);border-radius:8px;padding:8px;resize:vertical"></textarea>
+    <p style="font-size:11px;color:#5d5950;margin:0">Uma por linha: CHAVE=valor</p>
+
+    <label style="font-size:14px;font-weight:600">Restart policy</label>
+    <select name="restart" style="border:1px solid var(--border);border-radius:8px;padding:8px">
+      <option value="no">no</option>
+      <option value="unless-stopped">unless-stopped</option>
+      <option value="always">always</option>
+    </select>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+      <button class="fdev-btn" type="submit">Lançar Container</button>
+    </div>
+  </form>
+</div>
+<script>
+function fillDockerTemplate(id, image, port, env) {
+  document.getElementById('docker-tmpl-id').value = id
+  document.getElementById('docker-image').value = image
+  document.getElementById('docker-port').value = port
+  document.getElementById('docker-env').value = env
+  if (id && id !== 'custom') {
+    document.getElementById('docker-name').value = id + '-' + Math.random().toString(36).slice(2,6)
+  }
+}
+</script>
+{{end}}

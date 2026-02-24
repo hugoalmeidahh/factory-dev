@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/seuusuario/factorydev/internal/app"
 	idocker "github.com/seuusuario/factorydev/internal/docker"
 )
 
@@ -59,12 +60,6 @@ func (h *Handler) DockerDashboard(w http.ResponseWriter, r *http.Request) {
 	payload := map[string]any{
 		"Available": available,
 	}
-	if available {
-		containers, _ := cli.ListContainers(context.Background())
-		images, _ := cli.ListImages(context.Background())
-		payload["Containers"] = containers
-		payload["Images"] = images
-	}
 
 	if r.Header.Get("HX-Request") == "true" {
 		h.render(w, "docker/dashboard.html", payload)
@@ -76,6 +71,52 @@ func (h *Handler) DockerDashboard(w http.ResponseWriter, r *http.Request) {
 		ContentTpl: "docker/dashboard.html",
 		Data:       payload,
 	})
+}
+
+// GET /tools/docker/status — partial com status do daemon para o header
+func (h *Handler) DockerStatusPartial(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	cli, err := newDockerClient()
+	if err != nil || !cli.Available() {
+		h.render(w, "docker/status-header.html", map[string]any{"Available": false})
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	info, err := cli.GetDaemonInfo(ctx)
+	if err != nil {
+		h.render(w, "docker/status-header.html", map[string]any{"Available": false})
+		return
+	}
+	h.render(w, "docker/status-header.html", map[string]any{
+		"Available": true,
+		"Info":      info,
+	})
+}
+
+// POST /tools/docker/start — inicia o Docker Desktop (macOS/Windows) ou mostra instrução Linux
+func (h *Handler) StartDockerHandler(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	switch runtime.GOOS {
+	case "darwin":
+		if err := exec.Command("open", "-a", "Docker").Start(); err != nil {
+			h.errorToast(w, "Não foi possível iniciar o Docker Desktop: "+err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		h.successToastOnly(w, "Iniciando Docker Desktop… aguarde alguns segundos.")
+	case "windows":
+		// Docker Desktop no Windows
+		if err := exec.Command("cmd", "/C", "start", "", "Docker Desktop").Start(); err != nil {
+			h.errorToast(w, "Não foi possível iniciar o Docker Desktop.")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		h.successToastOnly(w, "Iniciando Docker Desktop…")
+	default:
+		h.errorToast(w, "No Linux inicie o Docker com: sudo systemctl start docker")
+		w.WriteHeader(http.StatusUnprocessableEntity)
+	}
 }
 
 // GET /tools/docker/containers (partial polling)

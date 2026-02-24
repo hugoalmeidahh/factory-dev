@@ -1,0 +1,34 @@
+{{define "servers/test-progress.html"}}
+<div id="server-op-{{.ID}}"
+  {{if not .Done}}
+  {{if .IsSend}}
+  hx-get="/tools/servers/send-jobs/{{.ID}}?serverId={{.ServerID}}"
+  {{else}}
+  hx-get="/tools/servers/test-jobs/{{.ID}}?serverId={{.ServerID}}"
+  {{end}}
+  hx-trigger="every 2s"
+  hx-swap="outerHTML"
+  {{end}}
+  style="padding:4px 0">
+
+  {{if .Done}}
+    {{if .OK}}
+    <div class="test-result ok">
+      <strong>✓ {{if .IsSend}}Arquivo enviado com sucesso!{{else}}Conexão SSH bem-sucedida!{{end}}</strong>
+      {{if .Output}}<pre style="margin:6px 0 0;font-size:11px">{{.Output}}</pre>{{end}}
+    </div>
+    {{else}}
+    <div class="test-result error">
+      <strong>✗ {{if .IsSend}}Falha no envio{{else}}Falha na conexão{{end}}</strong>
+      <p style="margin:4px 0 0;font-size:13px">{{.Error}}</p>
+      {{if .Output}}<pre style="margin:6px 0 0;font-size:11px">{{.Output}}</pre>{{end}}
+    </div>
+    {{end}}
+  {{else}}
+  <div class="fdev-clone-running">
+    <span class="fdev-spinner"></span>
+    {{if .IsSend}}Enviando arquivo…{{else}}Testando conexão SSH…{{end}}
+  </div>
+  {{end}}
+</div>
+{{end}}

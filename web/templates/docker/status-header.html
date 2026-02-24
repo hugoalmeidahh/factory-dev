@@ -1,0 +1,36 @@
+{{define "docker/status-header.html"}}
+<div id="docker-status-slot"
+  hx-get="/tools/docker/status"
+  hx-trigger="every 8s"
+  hx-swap="outerHTML"
+  style="display:flex;align-items:center;gap:10px">
+
+  {{if .Available}}
+    <span class="fdev-docker-status fdev-docker-status--running" style="font-size:12px">
+      ● Docker rodando
+    </span>
+    {{if .Info}}
+      <span style="font-size:12px;color:#5d5950">
+        {{.Info.ContainersRunning}} rodando
+        {{if gt .Info.ContainersStopped 0}}· {{.Info.ContainersStopped}} parado(s){{end}}
+      </span>
+      {{if gt .Info.TotalMemMB 0.0}}
+      <span style="font-size:12px;color:#5d5950">
+        · {{printf "%.0f" .Info.TotalMemMB}} MB
+      </span>
+      {{end}}
+      <span style="font-size:11px;color:#9c9890">v{{.Info.Version}}</span>
+    {{end}}
+  {{else}}
+    <span class="fdev-docker-status fdev-docker-status--exited" style="font-size:12px">
+      ○ Docker parado
+    </span>
+    <button class="fdev-btn fdev-btn--sm"
+      style="font-size:12px;padding:4px 10px"
+      hx-post="/tools/docker/start"
+      hx-swap="none">
+      ▶ Iniciar Docker
+    </button>
+  {{end}}
+</div>
+{{end}}

@@ -1,0 +1,29 @@
+{{define "repos/pull-progress.html"}}
+<div id="pull-progress-{{.ID}}"
+  {{if not .Done}}
+  hx-get="/tools/repos/pull-jobs/{{.ID}}?repoId={{.RepoID}}"
+  hx-trigger="every 2s"
+  hx-swap="outerHTML"
+  {{end}}>
+
+  {{if .Done}}
+    {{if .OK}}
+    <div class="clone-result ok">
+      <strong>✓ Pull concluído!</strong>
+      {{if .Output}}<pre>{{.Output}}</pre>{{end}}
+    </div>
+    {{else}}
+    <div class="clone-result error">
+      <strong>✗ Falha no pull</strong>
+      <p>{{.Error}}</p>
+      {{if .Output}}<pre>{{.Output}}</pre>{{end}}
+    </div>
+    {{end}}
+  {{else}}
+  <div class="fdev-clone-running">
+    <span class="fdev-spinner"></span>
+    Executando pull…
+  </div>
+  {{end}}
+</div>
+{{end}}

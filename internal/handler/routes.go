@@ -103,6 +103,8 @@ func (h *Handler) Routes() http.Handler {
 
 	// Docker
 	r.Get("/tools/docker", h.DockerDashboard)
+	r.Get("/tools/docker/status", h.DockerStatusPartial)
+	r.Post("/tools/docker/start", h.StartDockerHandler)
 	r.Get("/tools/docker/containers", h.ContainerList)
 	r.Post("/tools/docker/containers/{id}/{action}", h.ContainerAction)
 	r.Get("/tools/docker/containers/{id}/logs", h.ContainerLogs)

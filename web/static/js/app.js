@@ -4,6 +4,10 @@ function inferPage() {
   if (p.startsWith('/tools/keys')) return 'keys'
   if (p === '/' || p.startsWith('/tools/ssh')) return 'ssh'
   if (p.startsWith('/tools/repos')) return 'repos'
+  if (p.startsWith('/tools/git')) return 'git'
+  if (p.startsWith('/tools/servers')) return 'servers'
+  if (p.startsWith('/tools/system')) return 'system'
+  if (p.startsWith('/tools/docker')) return 'docker'
   if (p.startsWith('/doctor')) return 'doctor'
   return ''
 }
