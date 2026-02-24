@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FactoryDev — Apresentação</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --bg2:       #0f0f1a;
+      --bg3:       #13131f;
+      --border:    #1e1e2e;
+      --border2:   #2a2a3e;
+      --text:      #e2e0d8;
+      --text2:     #9c9890;
+      --text3:     #5d5950;
+      --cyan:      #00d4ff;
+      --pink:      #ff2d78;
+      --gold:      #f5c842;
+      --green:     #00e5a0;
+      --purple:    #a855f7;
+      --orange:    #ff6b35;
+    }
+
+    html {
+      scroll-snap-type: y mandatory;
+      overflow-y: scroll;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    /* ── Scroll Sections ─────────────────────────────────── */
+    .slide {
+      scroll-snap-align: start;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide--center {
+      align-items: center;
+      text-align: center;
+    }
+
+    /* ── Fixed Nav ───────────────────────────────────────── */
+    #topnav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(10,10,15,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-logo span { color: var(--cyan); }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--cyan); }
+
+    /* ── Side Dots ───────────────────────────────────────── */
+    #side-dots {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border2);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .dot.active {
+      background: var(--cyan);
+      transform: scale(1.4);
+    }
+
+    /* ── Typography ──────────────────────────────────────── */
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 16px;
+      padding: 4px 12px;
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 20px;
+    }
+
+    h1.hero-title {
+      font-size: clamp(56px, 8vw, 96px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -3px;
+      margin-bottom: 24px;
+    }
+
+    h2.section-title {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -2px;
+      margin-bottom: 16px;
+    }
+
+    h3.card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .grad-cyan  { background: linear-gradient(135deg, var(--cyan), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-pink  { background: linear-gradient(135deg, var(--pink), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-gold  { background: linear-gradient(135deg, var(--gold), var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-green { background: linear-gradient(135deg, var(--green), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-all   { background: linear-gradient(135deg, var(--cyan), var(--pink), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    .subtitle {
+      font-size: 20px;
+      color: var(--text2);
+      max-width: 640px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+
+    .subtitle b { color: var(--text); }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn--primary {
+      background: var(--cyan);
+      color: #000;
+    }
+    .btn--primary:hover { background: #33ddff; transform: translateY(-2px); }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+    .btn--ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ── Cards ───────────────────────────────────────────── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--border2);
+      transform: translateY(-3px);
+    }
+
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    /* ── Grids ───────────────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+
+    /* ── Feature Detail Layout ───────────────────────────── */
+    .feature-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .feature-layout.reverse { direction: rtl; }
+    .feature-layout.reverse > * { direction: ltr; }
+
+    .feature-visual {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .feature-visual .line { display: flex; gap: 12px; align-items: flex-start; }
+    .feature-visual .ln { color: var(--text3); min-width: 24px; text-align: right; user-select: none; }
+    .feature-visual .kw { color: var(--cyan); }
+    .feature-visual .str { color: var(--green); }
+    .feature-visual .cmt { color: var(--text3); }
+    .feature-visual .val { color: var(--gold); }
+    .feature-visual .fn  { color: var(--pink); }
+    .feature-visual .op  { color: var(--text2); }
+
+    .steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .steps-list li {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.4);
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-text strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .step-text span {
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    /* ── Code Block ──────────────────────────────────────── */
+    .code-block {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 2;
+      position: relative;
+    }
+
+    .code-block .prompt { color: var(--text3); user-select: none; }
+    .code-block .cmd { color: var(--cyan); }
+    .code-block .arg { color: var(--gold); }
+    .code-block .comment { color: var(--text3); font-style: italic; }
+
+    /* ── Tech Chip ───────────────────────────────────────── */
+    .tech-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: border-color 0.2s;
+    }
+
+    .tech-chip:hover { border-color: var(--cyan); }
+    .tech-chip .dot-lang { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ── Flow Diagram ────────────────────────────────────── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .flow-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      min-width: 0;
+    }
+
+    .flow-arrow {
+      color: var(--text3);
+      font-size: 18px;
+      padding: 0 8px;
+    }
+
+    /* ── Problem / Solution Table ────────────────────────── */
+    .prob-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .prob-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .prob-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .prob-table tr:last-child td { border-bottom: none; }
+
+    .prob-table td:first-child { color: var(--text2); }
+    .prob-table td:last-child  { color: var(--text); font-weight: 500; }
+
+    /* ── Arch Boxes ──────────────────────────────────────── */
+    .arch-layer {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+
+    .arch-layer-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 12px;
+    }
+
+    .arch-chips {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .arch-chip {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+
+    /* ── Scroll Indicator ────────────────────────────────── */
+    .scroll-hint {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--text3);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: bounceY 2s ease-in-out infinite;
+    }
+
+    @keyframes bounceY {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%       { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ── Background Glow ─────────────────────────────────── */
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.08;
+      pointer-events: none;
+    }
+    .glow--cyan   { background: var(--cyan); }
+    .glow--pink   { background: var(--pink); }
+    .glow--purple { background: var(--purple); }
+    .glow--gold   { background: var(--gold); }
+
+    /* ── Animations ──────────────────────────────────────── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Divider ─────────────────────────────────────────── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    /* ── Max Width Wrapper ───────────────────────────────── */
+    .w-max { max-width: 1140px; width: 100%; margin: 0 auto; }
+
+    /* ── Feature Number ──────────────────────────────────── */
+    .feat-num {
+      font-size: 72px;
+      font-weight: 900;
+      line-height: 1;
+      opacity: 0.06;
+      position: absolute;
+      top: 20px;
+      right: 32px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Repo Tabs ───────────────────────────────────────── */
+    .repo-tab-btn {
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text3);
+      font-family: 'Outfit', sans-serif;
+      transition: all 0.18s;
+    }
+
+    .repo-tab-btn:hover {
+      color: var(--text);
+      border-color: var(--border2);
+    }
+
+    .repo-tab-btn--active {
+      background: rgba(255,45,120,0.15);
+      color: var(--pink);
+      border-color: rgba(255,45,120,0.3);
+    }
+
+    .repo-tab-panel {
+      animation: tabIn 0.22s ease;
+    }
+
+    @keyframes tabIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Commit rows ─────────────────────────────────────── */
+    .commit-row {
+      display: grid;
+      grid-template-columns: 68px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .commit-hash {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan);
+      font-size: 11px;
+    }
+
+    .commit-msg {
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .commit-meta {
+      color: var(--text3);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    /* ── Badges ──────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge--cyan   { background: rgba(0,212,255,0.1); color: var(--cyan); border: 1px solid rgba(0,212,255,0.3); }
+    .badge--green  { background: rgba(0,229,160,0.1); color: var(--green); border: 1px solid rgba(0,229,160,0.3); }
+    .badge--pink   { background: rgba(255,45,120,0.1); color: var(--pink); border: 1px solid rgba(255,45,120,0.3); }
+    .badge--gold   { background: rgba(245,200,66,0.1); color: var(--gold); border: 1px solid rgba(245,200,66,0.3); }
+    .badge--purple { background: rgba(168,85,247,0.1); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
+    .badge--orange { background: rgba(255,107,53,0.1); color: var(--orange); border: 1px solid rgba(255,107,53,0.3); }
+  </style>
+</head>
+<body>
+
+<!-- ── Fixed Navigation ─────────────────────────────── -->
+<nav id="topnav">
+  <div class="nav-logo">Factory<span>Dev</span></div>
+  <ul class="nav-links">
+    <li><a href="#hero">Início</a></li>
+    <li><a href="#problems">Problemas</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#architecture">Arquitetura</a></li>
+    <li><a href="#howto">Como Rodar</a></li>
+    <li><a href="http://localhost:7337" target="_blank" class="btn btn--primary" style="padding:8px 20px;font-size:13px">Abrir App</a></li>
+  </ul>
+</nav>
+
+<!-- ── Side Dots ────────────────────────────────────── -->
+<div id="side-dots"></div>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 1 — HERO
+══════════════════════════════════════════════════════ -->
+<section class="slide slide--center" id="hero" data-dot="Início">
+  <div class="glow glow--cyan"  style="width:600px;height:600px;top:-200px;right:-100px;"></div>
+  <div class="glow glow--pink"  style="width:400px;height:400px;bottom:-100px;left:-100px;"></div>
+
+  <div class="fade-in">
+    <div class="tag">Ferramenta de Desenvolvimento Local</div>
+    <h1 class="hero-title">
+      Factory<span class="grad-cyan">Dev</span>
+    </h1>
+    <p class="subtitle" style="margin:0 auto 40px">
+      Uma <b>interface web local</b> que centraliza as tarefas mais repetitivas do dia-a-dia de um dev:
+      SSH, Git, Repos, Servidores, Docker e muito mais —
+      <b>sem decorar comandos</b>, sem abrir 10 terminais.
+    </p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <a href="http://localhost:7337" target="_blank" class="btn btn--primary">▶ Abrir FactoryDev</a>
+      <a href="#problems" class="btn btn--ghost">Ver o que resolve →</a>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <span>scroll</span>
+    <span style="font-size:18px">↓</span>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 2 — PROBLEMAS
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="problems" data-dot="Problemas">
+  <div class="glow glow--purple" style="width:500px;height:500px;top:50%;left:-200px;transform:translateY(-50%);"></div>
+
+  <div class="w-max fade-in">
+    <div class="tag">O que resolve</div>
+    <h2 class="section-title">Problemas do <span class="grad-pink">dia-a-dia</span></h2>
+    <p class="subtitle" style="margin-bottom:40px">
+      Cada tarefa repetitiva resolvida com poucos cliques.
+    </p>
+
+    <table class="prob-table">
+      <thead>
+        <tr>
+          <th>Dor</th>
+          <th>Solução no FactoryDev</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gerenciar múltiplas chaves SSH (pessoal, trabalho, cliente)</td>
+          <td>Key Manager — gera, importa e organiza chaves ed25519/RSA/ECDSA</td>
+          <td><span class="badge badge--cyan">Keys</span></td>
+        </tr>
+        <tr>
+          <td>Configurar SSH para vários hosts/contas GitHub/GitLab</td>
+          <td>SSH / Git Accounts — aplica ~/.ssh/config automaticamente com diff preview</td>
+          <td><span class="badge badge--green">SSH</span></td>
+        </tr>
+        <tr>
+          <td>Clonar repos com a conta certa, sem errar o SSH host</td>
+          <td>Repositories — clona via SSH com a conta selecionada, status ao vivo</td>
+          <td><span class="badge badge--pink">Repos</span></td>
+        </tr>
+        <tr>
+          <td>Manter identidades git separadas por projeto</td>
+          <td>Git Identities — configura user.name/email e commit signing por diretório via includeIf</td>
+          <td><span class="badge badge--gold">Git</span></td>
+        </tr>
+        <tr>
+          <td>Conectar e enviar arquivos para servidores remotos</td>
+          <td>Server Manager — testa SSH, abre terminal, envia via SCP com progresso</td>
+          <td><span class="badge badge--purple">Servers</span></td>
+        </tr>
+        <tr>
+          <td>Monitorar CPU/RAM/disco da máquina local</td>
+          <td>System Info — dashboard atualizado a cada 5s com go runtime info</td>
+          <td><span class="badge badge--orange">System</span></td>
+        </tr>
+        <tr>
+          <td>Subir containers de dev rápido (Postgres, Redis, Mongo...)</td>
+          <td>Docker Manager — inicia Docker, lança containers com templates pré-configurados</td>
+          <td><span class="badge badge--cyan">Docker</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 3 — VISÃO GERAL DAS FEATURES
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="features" data-dot="Features">
+  <div class="glow glow--cyan" style="width:400px;height:400px;bottom:-100px;right:-100px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="tag">Funcionalidades</div>
+    <h2 class="section-title">7 módulos, <span class="grad-cyan">1 interface</span></h2>
+    <p class="subtitle" style="margin-bottom:40px">
+      Tudo acessível em <b>http://localhost:7337</b> — sem instalar extensões, sem configurar nada.
+    </p>
+
+    <div class="grid-auto">
+      <div class="card" style="border-color:rgba(0,212,255,0.2)">
+        <span class="card-icon">🔑</span>
+        <h3 class="card-title">Key Manager</h3>
+        <p>Gera ed25519, RSA e ECDSA. Importa chaves do disco, regenera pública a partir da privada, exporta em Base64.</p>
+        <div style="margin-top:12px"><span class="badge badge--cyan">SSH Keys</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(0,229,160,0.2)">
+        <span class="card-icon">🔗</span>
+        <h3 class="card-title">SSH / Git Accounts</h3>
+        <p>Cria contas vinculando host, chave e identidade. Aplica ~/.ssh/config com diff preview e testa a conexão em tempo real.</p>
+        <div style="margin-top:12px"><span class="badge badge--green">~/.ssh/config</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(255,45,120,0.2)">
+        <span class="card-icon">📦</span>
+        <h3 class="card-title">Repositories</h3>
+        <p>Clona via SSH assíncrono com progresso. Escaneia diretórios para importar repos. Tabs: Overview, Config, Commits.</p>
+        <div style="margin-top:12px"><span class="badge badge--pink">git clone</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(245,200,66,0.2)">
+        <span class="card-icon">🪪</span>
+        <h3 class="card-title">Git Identities</h3>
+        <p>Perfis de identidade por diretório via includeIf. Configura commit signing SSH. Instruções para GitHub/GitLab.</p>
+        <div style="margin-top:12px"><span class="badge badge--gold">includeIf</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(168,85,247,0.2)">
+        <span class="card-icon">🖥️</span>
+        <h3 class="card-title">Server Manager</h3>
+        <p>Cadastra servidores SSH com tags. Testa conexão async, abre terminal direto, envia arquivos via SCP.</p>
+        <div style="margin-top:12px"><span class="badge badge--purple">SSH / SCP</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(255,107,53,0.2)">
+        <span class="card-icon">📊</span>
+        <h3 class="card-title">System Info</h3>
+        <p>Dashboard com CPU por core, RAM, Swap, discos, rede. Atualização a cada 5s. Go runtime info. Editar hostname.</p>
+        <div style="margin-top:12px"><span class="badge badge--orange">gopsutil</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(0,212,255,0.15)">
+        <span class="card-icon">🐳</span>
+        <h3 class="card-title">Docker Manager</h3>
+        <p>Status do daemon em tempo real, lista containers, logs, pull de imagens. Templates: Postgres, MySQL, Redis, Mongo, Adminer.</p>
+        <div style="margin-top:12px"><span class="badge badge--cyan">Docker SDK</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 4 — KEY MANAGER + SSH ACCOUNTS (detalhe)
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="feat-keys" data-dot="Keys">
+  <div class="glow glow--cyan" style="width:500px;height:500px;top:0;right:-150px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="feat-num">01</div>
+    <div class="tag">Key Manager + SSH Accounts</div>
+    <h2 class="section-title">Chaves <span class="grad-cyan">sem dor de cabeça</span></h2>
+
+    <div class="feature-layout" style="margin-top:32px">
+      <div>
+        <ul class="steps-list">
+          <li>
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <strong>Gerar ou importar chave</strong>
+              <span>Escolha o tipo (ed25519, RSA 4096, ECDSA), dê um alias. A chave vai para ~/.fdev/keys/alias/.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <strong>Criar conta SSH/Git</strong>
+              <span>Associe a chave a um host (github.com, gitlab.com, servidor privado) e a uma identidade git.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <strong>Aplicar ~/.ssh/config</strong>
+              <span>Veja o diff antes de salvar. A entrada Host aparece automaticamente para cada conta.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">4</div>
+            <div class="step-text">
+              <strong>Testar conexão</strong>
+              <span>Clique em "Testar SSH" — feedback em tempo real. Pronto para clonar.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="feature-visual">
+        <div class="line"><span class="ln">1</span><span><span class="cmt"># ~/.ssh/config gerado automaticamente</span></span></div>
+        <div class="line"><span class="ln">2</span><span></span></div>
+        <div class="line"><span class="ln">3</span><span><span class="kw">Host</span> <span class="val">github-trabalho</span></span></div>
+        <div class="line"><span class="ln">4</span><span>  <span class="kw">HostName</span>     <span class="str">github.com</span></span></div>
+        <div class="line"><span class="ln">5</span><span>  <span class="kw">User</span>         <span class="str">git</span></span></div>
+        <div class="line"><span class="ln">6</span><span>  <span class="kw">IdentityFile</span> <span class="str">~/.fdev/keys/trabalho/id_ed25519</span></span></div>
+        <div class="line"><span class="ln">7</span><span></span></div>
+        <div class="line"><span class="ln">8</span><span><span class="kw">Host</span> <span class="val">github-pessoal</span></span></div>
+        <div class="line"><span class="ln">9</span><span>  <span class="kw">HostName</span>     <span class="str">github.com</span></span></div>
+        <div class="line"><span class="ln">10</span><span>  <span class="kw">User</span>         <span class="str">git</span></span></div>
+        <div class="line"><span class="ln">11</span><span>  <span class="kw">IdentityFile</span> <span class="str">~/.fdev/keys/pessoal/id_ed25519</span></span></div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div class="line"><span class="ln">→</span><span style="color:var(--green)">✓  Conexão SSH autenticada com sucesso</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 5 — REPOSITORIES (detalhe)
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="feat-repos" data-dot="Repos">
+  <div class="glow glow--pink" style="width:500px;height:500px;bottom:0;left:-150px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="feat-num">02</div>
+    <div class="tag">Repository Manager</div>
+    <h2 class="section-title">Repos com <span class="grad-pink">contexto completo</span></h2>
+
+    <div class="feature-layout reverse" style="margin-top:32px">
+
+      <!-- ── Lado esquerdo: descrição muda com a tab ── -->
+      <div id="repos-desc">
+        <!-- preenchido pelo JS -->
+      </div>
+
+      <!-- ── Lado direito: card com tabs interativas ── -->
+      <div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:nowrap;overflow-x:auto">
+          <div class="flow-box" style="border-color:rgba(255,45,120,0.3);white-space:nowrap;flex-shrink:0;min-width:0">URL SSH</div>
+          <div class="flow-arrow" style="flex-shrink:0">→</div>
+          <div class="flow-box" style="white-space:nowrap;flex-shrink:0;min-width:0">Conta SSH</div>
+          <div class="flow-arrow" style="flex-shrink:0">→</div>
+          <div class="flow-box" style="border-color:rgba(255,45,120,0.3);white-space:nowrap;flex-shrink:0;min-width:0">git clone</div>
+          <div class="flow-arrow" style="flex-shrink:0">→</div>
+          <div class="flow-box" style="white-space:nowrap;flex-shrink:0;min-width:0">Log ao vivo</div>
+        </div>
+
+        <div class="card" style="margin-top:16px;min-height:260px">
+          <!-- Tab bar -->
+          <div style="display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
+            <button class="repo-tab-btn repo-tab-btn--active" data-tab="overview" onclick="switchRepoTab('overview')">Overview</button>
+            <button class="repo-tab-btn" data-tab="config"   onclick="switchRepoTab('config')">Config</button>
+            <button class="repo-tab-btn" data-tab="commits"  onclick="switchRepoTab('commits')">Commits</button>
+          </div>
+
+          <!-- TAB: Overview -->
+          <div id="repo-tab-overview" class="repo-tab-panel">
+            <div style="font-size:13px;line-height:2.1">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">Branch</span>
+                <span style="color:var(--pink);font-family:'JetBrains Mono',monospace;font-size:12px">● main</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">Último commit</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text)">feat: add docker status</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">Autor</span>
+                <span style="font-size:12px">Hugo Dev</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="color:var(--text2)">Modificados</span>
+                <span style="color:var(--gold);font-size:12px">3 arquivos</span>
+              </div>
+            </div>
+            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px">
+              <button class="btn btn--ghost" style="font-size:11px;padding:5px 10px">↓ Pull</button>
+              <button class="btn btn--ghost" style="font-size:11px;padding:5px 10px">⎇ Novo Branch</button>
+              <button class="btn btn--primary" style="font-size:11px;padding:5px 10px">⊞ Terminal</button>
+            </div>
+          </div>
+
+          <!-- TAB: Config -->
+          <div id="repo-tab-config" class="repo-tab-panel" style="display:none">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:2">
+              <div><span style="color:var(--text3)">[user]</span></div>
+              <div style="padding-left:16px"><span style="color:var(--cyan)">name</span>  <span style="color:var(--text3)">=</span> <span style="color:var(--green)">Hugo Dev</span></div>
+              <div style="padding-left:16px"><span style="color:var(--cyan)">email</span> <span style="color:var(--text3)">=</span> <span style="color:var(--green)">hugo@dev.com</span></div>
+              <div style="margin-top:4px"><span style="color:var(--text3)">[remote "origin"]</span></div>
+              <div style="padding-left:16px"><span style="color:var(--cyan)">url</span>   <span style="color:var(--text3)">=</span> <span style="color:var(--pink)">git@github-trabalho:org/repo.git</span></div>
+              <div style="padding-left:16px"><span style="color:var(--cyan)">fetch</span> <span style="color:var(--text3)">=</span> <span style="color:var(--text2)">+refs/heads/*:refs/remotes/origin/*</span></div>
+              <div style="margin-top:4px"><span style="color:var(--text3)">[branch "main"]</span></div>
+              <div style="padding-left:16px"><span style="color:var(--cyan)">remote</span> <span style="color:var(--text3)">=</span> <span style="color:var(--gold)">origin</span></div>
+              <div style="padding-left:16px"><span style="color:var(--cyan)">merge</span>  <span style="color:var(--text3)">=</span> <span style="color:var(--gold)">refs/heads/main</span></div>
+            </div>
+          </div>
+
+          <!-- TAB: Commits -->
+          <div id="repo-tab-commits" class="repo-tab-panel" style="display:none">
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="commit-row">
+                <span class="commit-hash">b661045</span>
+                <span class="commit-msg">feat: add docker status header</span>
+                <span class="commit-meta">hoje · Hugo</span>
+              </div>
+              <div class="commit-row">
+                <span class="commit-hash">9795727</span>
+                <span class="commit-msg">feat: UI reactivity, async clone, systray</span>
+                <span class="commit-meta">ontem · Hugo</span>
+              </div>
+              <div class="commit-row">
+                <span class="commit-hash">7f7db0f</span>
+                <span class="commit-msg">feat: initial commit, ssh key generate</span>
+                <span class="commit-meta">2d · Hugo</span>
+              </div>
+              <div class="commit-row">
+                <span class="commit-hash">3a1c9de</span>
+                <span class="commit-msg">chore: go mod tidy, fix deps</span>
+                <span class="commit-meta">3d · Hugo</span>
+              </div>
+              <div class="commit-row" style="border-bottom:none">
+                <span class="commit-hash">f002b41</span>
+                <span class="commit-msg">init: project scaffold</span>
+                <span class="commit-meta">5d · Hugo</span>
+              </div>
+            </div>
+            <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:11px;color:var(--text3)">5 commits exibidos</span>
+              <button class="btn btn--ghost" style="font-size:11px;padding:4px 10px">Ver mais →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 6 — GIT IDENTITIES (detalhe)
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="feat-git" data-dot="Git ID">
+  <div class="glow glow--gold" style="width:500px;height:500px;top:-100px;right:-150px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="feat-num">03</div>
+    <div class="tag">Git Identities</div>
+    <h2 class="section-title">Identidades <span class="grad-gold">por projeto</span></h2>
+
+    <div class="feature-layout" style="margin-top:32px">
+      <div>
+        <ul class="steps-list">
+          <li>
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <strong>Criar perfil de identidade</strong>
+              <span>Nome, e-mail e chave para commit signing. Pode ser pessoal, trabalho, open-source...</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <strong>Configurar global</strong>
+              <span>Aplica user.name, user.email, gpg.format = ssh e signingkey no ~/.gitconfig global.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <strong>Regras por diretório</strong>
+              <span>Usa includeIf gitdir:~/trabalho/ para trocar automaticamente a identidade conforme o diretório.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">4</div>
+            <div class="step-text">
+              <strong>Commit signing SSH</strong>
+              <span>Instruções passo a passo para adicionar a chave pública como signing key no GitHub/GitLab.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="feature-visual">
+        <div class="line"><span class="ln">1</span><span><span class="cmt"># ~/.gitconfig</span></span></div>
+        <div class="line"><span class="ln">2</span><span></span></div>
+        <div class="line"><span class="ln">3</span><span><span class="op">[</span><span class="kw">user</span><span class="op">]</span></span></div>
+        <div class="line"><span class="ln">4</span><span>  <span class="kw">name</span>  = <span class="str">Hugo Dev</span></span></div>
+        <div class="line"><span class="ln">5</span><span>  <span class="kw">email</span> = <span class="str">hugo@pessoal.com</span></span></div>
+        <div class="line"><span class="ln">6</span><span></span></div>
+        <div class="line"><span class="ln">7</span><span><span class="op">[</span><span class="kw">gpg</span><span class="op">]</span></span></div>
+        <div class="line"><span class="ln">8</span><span>  <span class="kw">format</span> = <span class="val">ssh</span></span></div>
+        <div class="line"><span class="ln">9</span><span></span></div>
+        <div class="line"><span class="ln">10</span><span><span class="op">[</span><span class="kw">includeIf "gitdir:~/trabalho/"</span><span class="op">]</span></span></div>
+        <div class="line"><span class="ln">11</span><span>  <span class="kw">path</span> = <span class="str">~/.gitconfig-trabalho</span></span></div>
+        <div class="line"><span class="ln">12</span><span></span></div>
+        <div class="line"><span class="ln">13</span><span><span class="cmt"># ~/.gitconfig-trabalho</span></span></div>
+        <div class="line"><span class="ln">14</span><span><span class="op">[</span><span class="kw">user</span><span class="op">]</span></span></div>
+        <div class="line"><span class="ln">15</span><span>  <span class="kw">name</span>  = <span class="str">Hugo Empresa</span></span></div>
+        <div class="line"><span class="ln">16</span><span>  <span class="kw">email</span> = <span class="str">hugo@empresa.com</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 7 — SERVER MANAGER (detalhe)
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="feat-servers" data-dot="Servers">
+  <div class="glow glow--purple" style="width:500px;height:500px;bottom:0;right:-150px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="feat-num">04</div>
+    <div class="tag">Server Manager</div>
+    <h2 class="section-title">Servidores <span class="grad-cyan" style="background-image:linear-gradient(135deg,#a855f7,#00d4ff)">ao alcance</span></h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-top:32px">
+      <div>
+        <ul class="steps-list">
+          <li>
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <strong>Cadastrar servidor</strong>
+              <span>Host, porta, usuário, chave SSH, tags (produção, staging, cliente...). Tudo salvo em state.json.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <strong>Testar conexão</strong>
+              <span>Feedback assíncrono — vê em tempo real se a chave funciona, tempo de resposta e mensagens de erro.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <strong>Abrir terminal SSH</strong>
+              <span>Abre o Terminal.app (macOS) direto no SSH do servidor. Linux detecta gnome-terminal, konsole, kitty...</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">4</div>
+            <div class="step-text">
+              <strong>Enviar arquivo via SCP</strong>
+              <span>Selecione arquivo local e destino remoto. Barra de progresso em tempo real via polling HTMX.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="card" style="border-color:rgba(168,85,247,0.3)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 class="card-title" style="margin:0">api.produção.com</h3>
+            <div style="display:flex;gap:6px">
+              <span class="badge badge--green">● online</span>
+              <span class="badge badge--purple">prod</span>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text2);line-height:2;margin-bottom:16px">
+            <div>ubuntu@api.producao.com:22</div>
+            <div>Chave: ~/.fdev/keys/producao/id_ed25519</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn--ghost" style="font-size:12px;padding:6px 12px">⟳ Testar SSH</button>
+            <button class="btn btn--primary" style="font-size:12px;padding:6px 12px">⊞ Terminal</button>
+            <button class="btn btn--ghost" style="font-size:12px;padding:6px 12px">↑ Enviar arquivo</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;border-color:rgba(168,85,247,0.15)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:13px;font-weight:600">Enviando deploy.tar.gz…</span>
+            <span style="font-size:12px;color:var(--purple)">73%</span>
+          </div>
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+            <div style="width:73%;height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:3px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 8 — DOCKER MANAGER (detalhe)
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="feat-docker" data-dot="Docker">
+  <div class="glow glow--cyan" style="width:400px;height:400px;top:-50px;left:-100px;"></div>
+  <div class="glow glow--pink"  style="width:300px;height:300px;bottom:-50px;right:-100px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="feat-num">05</div>
+    <div class="tag">Docker Manager</div>
+    <h2 class="section-title">Dev stacks em <span class="grad-green">segundos</span></h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-top:32px">
+      <div>
+        <p style="color:var(--text2);font-size:14px;margin-bottom:24px;line-height:1.8">
+          Status do daemon Docker no header da página, atualizado a cada 8s.
+          Se o Docker não estiver rodando, um botão <b style="color:var(--cyan)">▶ Iniciar Docker</b> executa
+          <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px">open -a Docker</code>
+          (macOS) ou orienta o Linux sobre systemctl.
+        </p>
+
+        <ul class="steps-list">
+          <li>
+            <div class="step-num">1</div>
+            <div class="step-text">
+              <strong>Containers ao vivo</strong>
+              <span>Lista com refresh a cada 10s. Iniciar, parar, reiniciar, remover — tudo em 1 clique.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">2</div>
+            <div class="step-text">
+              <strong>Logs e detalhes</strong>
+              <span>Visualize logs do container, inspecione variáveis de ambiente e configurações.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">3</div>
+            <div class="step-text">
+              <strong>Templates pré-configurados</strong>
+              <span>PostgreSQL 16, MySQL 8, Redis 7, MongoDB 7, Adminer — ou configuração manual completa.</span>
+            </div>
+          </li>
+          <li>
+            <div class="step-num">4</div>
+            <div class="step-text">
+              <strong>Gerenciar imagens</strong>
+              <span>Listar, pull assíncrono com progresso e remover imagens não utilizadas.</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="card" style="border-color:rgba(0,212,255,0.2);margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+            <span style="color:var(--green);font-size:12px;font-weight:600">● Docker rodando</span>
+            <span style="font-size:12px;color:var(--text2)">3 rodando · 1 parado</span>
+            <span style="font-size:11px;color:var(--text3)">v27.3.1</span>
+            <span style="font-size:11px;color:var(--text3)">· 1.2 GB</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+              <span style="font-family:'JetBrains Mono',monospace">postgres-dev</span>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge badge--green">running</span>
+                <span style="color:var(--text3);font-size:11px">5432</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+              <span style="font-family:'JetBrains Mono',monospace">redis-7</span>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge badge--green">running</span>
+                <span style="color:var(--text3);font-size:11px">6379</span>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+              <span style="font-family:'JetBrains Mono',monospace">adminer</span>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge badge--gold">stopped</span>
+                <span style="color:var(--text3);font-size:11px">8080</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div class="card" style="padding:14px;text-align:center;cursor:pointer;border-color:rgba(0,212,255,0.15)">
+            <div style="font-size:22px;margin-bottom:4px">🐘</div>
+            <div style="font-size:11px;font-weight:600">PostgreSQL</div>
+            <div style="font-size:10px;color:var(--text3)">16-alpine</div>
+          </div>
+          <div class="card" style="padding:14px;text-align:center;cursor:pointer;border-color:rgba(0,212,255,0.15)">
+            <div style="font-size:22px;margin-bottom:4px">🔴</div>
+            <div style="font-size:11px;font-weight:600">Redis</div>
+            <div style="font-size:10px;color:var(--text3)">7-alpine</div>
+          </div>
+          <div class="card" style="padding:14px;text-align:center;cursor:pointer;border-color:rgba(0,212,255,0.15)">
+            <div style="font-size:22px;margin-bottom:4px">🍃</div>
+            <div style="font-size:11px;font-weight:600">MongoDB</div>
+            <div style="font-size:10px;color:var(--text3)">7.0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 9 — ARCHITECTURE
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="architecture" data-dot="Arquitetura">
+  <div class="glow glow--gold" style="width:400px;height:400px;bottom:-100px;left:-100px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="tag">Arquitetura</div>
+    <h2 class="section-title">Simples, <span class="grad-gold">sem build step</span></h2>
+    <p class="subtitle" style="margin-bottom:40px">
+      Binário único. Assets embutidos via <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-size:14px">go:embed</code>.
+      Zero dependências externas em produção.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+      <div>
+        <!-- Architecture layers -->
+        <div class="arch-layer">
+          <div class="arch-layer-label">Frontend</div>
+          <div class="arch-chips">
+            <span class="arch-chip" style="background:rgba(255,120,0,0.1);color:#ff7800;border-color:rgba(255,120,0,0.3)">HTMX 2.x</span>
+            <span class="arch-chip" style="background:rgba(68,170,68,0.1);color:#4a4;border-color:rgba(68,170,68,0.3)">Alpine.js</span>
+            <span class="arch-chip" style="background:rgba(0,212,255,0.1);color:var(--cyan);border-color:rgba(0,212,255,0.3)">HTML Templates</span>
+            <span class="arch-chip" style="background:rgba(100,100,255,0.1);color:#88f;border-color:rgba(100,100,255,0.3)">CSS Custom</span>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:4px 0;color:var(--text3);font-size:18px">↕</div>
+
+        <div class="arch-layer">
+          <div class="arch-layer-label">Backend (Go)</div>
+          <div class="arch-chips">
+            <span class="arch-chip" style="background:rgba(0,173,216,0.1);color:#00add8;border-color:rgba(0,173,216,0.3)">Go 1.24</span>
+            <span class="arch-chip" style="background:rgba(0,212,255,0.1);color:var(--cyan);border-color:rgba(0,212,255,0.3)">chi router</span>
+            <span class="arch-chip" style="background:rgba(168,85,247,0.1);color:var(--purple);border-color:rgba(168,85,247,0.3)">html/template</span>
+            <span class="arch-chip" style="background:rgba(0,229,160,0.1);color:var(--green);border-color:rgba(0,229,160,0.3)">go:embed</span>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:4px 0;color:var(--text3);font-size:18px">↕</div>
+
+        <div class="arch-layer">
+          <div class="arch-layer-label">Sistema / Integrações</div>
+          <div class="arch-chips">
+            <span class="arch-chip" style="background:rgba(0,100,255,0.1);color:#2277ff;border-color:rgba(0,100,255,0.3)">Docker SDK</span>
+            <span class="arch-chip" style="background:rgba(245,200,66,0.1);color:var(--gold);border-color:rgba(245,200,66,0.3)">gopsutil/v3</span>
+            <span class="arch-chip" style="background:rgba(255,107,53,0.1);color:var(--orange);border-color:rgba(255,107,53,0.3)">os/exec + ssh</span>
+            <span class="arch-chip" style="background:rgba(168,85,247,0.1);color:var(--purple);border-color:rgba(168,85,247,0.3)">osascript</span>
+          </div>
+        </div>
+
+        <div style="text-align:center;padding:4px 0;color:var(--text3);font-size:18px">↕</div>
+
+        <div class="arch-layer">
+          <div class="arch-layer-label">Persistência</div>
+          <div class="arch-chips">
+            <span class="arch-chip" style="background:rgba(0,229,160,0.1);color:var(--green);border-color:rgba(0,229,160,0.3)">~/.fdev/state.json</span>
+            <span class="arch-chip" style="background:rgba(0,212,255,0.1);color:var(--cyan);border-color:rgba(0,212,255,0.3)">~/.fdev/keys/</span>
+            <span class="arch-chip" style="background:rgba(245,200,66,0.1);color:var(--gold);border-color:rgba(245,200,66,0.3)">~/.ssh/config</span>
+            <span class="arch-chip" style="background:rgba(168,85,247,0.1);color:var(--purple);border-color:rgba(168,85,247,0.3)">~/.gitconfig</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="code-block">
+          <div><span class="comment"># Estrutura do projeto</span></div>
+          <div>factory-dev/</div>
+          <div>├── <span class="cmd">cmd/factorydev/</span>     <span class="comment"># entrypoint</span></div>
+          <div>├── <span class="cmd">internal/</span></div>
+          <div>│   ├── <span class="arg">app/</span>             <span class="comment"># state + handlers wiring</span></div>
+          <div>│   ├── <span class="arg">handler/</span>         <span class="comment"># HTTP handlers</span></div>
+          <div>│   ├── <span class="arg">docker/</span>          <span class="comment"># Docker SDK client</span></div>
+          <div>│   ├── <span class="arg">git/</span>             <span class="comment"># git ops + terminal</span></div>
+          <div>│   └── <span class="arg">system/</span>          <span class="comment"># gopsutil wrapper</span></div>
+          <div>└── <span class="cmd">web/</span></div>
+          <div>    ├── <span class="arg">templates/</span>       <span class="comment"># HTML Go templates</span></div>
+          <div>    └── <span class="arg">static/</span>          <span class="comment"># CSS + JS (embed)</span></div>
+          <div style="margin-top:12px"></div>
+          <div><span class="comment"># Estado persistido</span></div>
+          <div>~/.fdev/</div>
+          <div>├── <span class="cmd">state.json</span>         <span class="comment"># chaves, contas, repos...</span></div>
+          <div>└── <span class="arg">keys/alias/</span>        <span class="comment"># pares SSH gerados</span></div>
+        </div>
+
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="card" style="padding:16px">
+            <div style="font-size:24px;font-weight:900;color:var(--cyan);font-family:'JetBrains Mono',monospace">~15ms</div>
+            <div style="font-size:12px;color:var(--text2)">tempo de resposta médio</div>
+          </div>
+          <div class="card" style="padding:16px">
+            <div style="font-size:24px;font-weight:900;color:var(--green);font-family:'JetBrains Mono',monospace">1 bin</div>
+            <div style="font-size:12px;color:var(--text2)">sem dependências externas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 10 — COMO RODAR (DEV)
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="howto" data-dot="Como Rodar">
+  <div class="glow glow--green" style="width:400px;height:400px;top:-50px;right:-100px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="tag">Como rodar</div>
+    <h2 class="section-title">Rodando em <span class="grad-green">desenvolvimento</span></h2>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:32px">
+      <div>
+        <h3 class="card-title" style="margin-bottom:16px;color:var(--text2)">Pré-requisitos</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:32px">
+          <div class="tech-chip">
+            <div class="dot-lang" style="background:#00add8"></div>
+            Go 1.23+
+            <span style="font-size:11px;color:var(--text3);margin-left:auto">golang.org/dl</span>
+          </div>
+          <div class="tech-chip">
+            <div class="dot-lang" style="background:#f54d27"></div>
+            Git
+            <span style="font-size:11px;color:var(--text3);margin-left:auto">para as funcionalidades de repo</span>
+          </div>
+          <div class="tech-chip">
+            <div class="dot-lang" style="background:#2496ed"></div>
+            Docker Desktop (opcional)
+            <span style="font-size:11px;color:var(--text3);margin-left:auto">para Docker Manager</span>
+          </div>
+        </div>
+
+        <h3 class="card-title" style="margin-bottom:12px;color:var(--text2)">Comandos Make</h3>
+        <table style="font-size:13px;width:100%;border-collapse:collapse">
+          <tr>
+            <td style="padding:8px;font-family:'JetBrains Mono',monospace;color:var(--cyan)">make dev</td>
+            <td style="padding:8px;color:var(--text2)">Servidor dev com go run</td>
+          </tr>
+          <tr style="border-top:1px solid var(--border)">
+            <td style="padding:8px;font-family:'JetBrains Mono',monospace;color:var(--cyan)">make build</td>
+            <td style="padding:8px;color:var(--text2)">Compila bin/factorydev</td>
+          </tr>
+          <tr style="border-top:1px solid var(--border)">
+            <td style="padding:8px;font-family:'JetBrains Mono',monospace;color:var(--cyan)">make release</td>
+            <td style="padding:8px;color:var(--text2)">Binários linux-amd64 e arm64</td>
+          </tr>
+          <tr style="border-top:1px solid var(--border)">
+            <td style="padding:8px;font-family:'JetBrains Mono',monospace;color:var(--cyan)">make lint</td>
+            <td style="padding:8px;color:var(--text2)">golangci-lint ou go vet</td>
+          </tr>
+          <tr style="border-top:1px solid var(--border)">
+            <td style="padding:8px;font-family:'JetBrains Mono',monospace;color:var(--cyan)">make clean</td>
+            <td style="padding:8px;color:var(--text2)">Remove bin/ e dist/</td>
+          </tr>
+        </table>
+      </div>
+
+      <div>
+        <div class="code-block">
+          <div><span class="prompt">$</span> <span class="cmd">git clone</span> <span class="arg">&lt;url&gt;</span> factory-dev</div>
+          <div><span class="prompt">$</span> <span class="cmd">cd</span> factory-dev</div>
+          <div></div>
+          <div><span class="comment"># Baixar dependências</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">go mod download</span></div>
+          <div></div>
+          <div><span class="comment"># Rodar em modo dev</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">make</span> <span class="arg">dev</span></div>
+          <div></div>
+          <div style="color:var(--green)">  FactoryDev listening on :7337</div>
+          <div></div>
+          <div><span class="comment"># Abrir no browser</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">open</span> <span class="arg">http://localhost:7337</span></div>
+        </div>
+
+        <div class="card" style="margin-top:16px;border-color:rgba(0,229,160,0.2)">
+          <h3 class="card-title" style="color:var(--green);margin-bottom:8px">Dev mode: hot reload de templates</h3>
+          <p style="font-size:13px">Em modo dev, os assets CSS, JS e templates HTML são lidos do disco em tempo real. Altere um template e recarregue o browser — sem restart do servidor.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <div class="card" style="padding:14px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Health check</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan)">:7337/health</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">{"status":"ok"}</div>
+          </div>
+          <div class="card" style="padding:14px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Diagnóstico</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan)">:7337/doctor</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px">git, ssh, docker detectados</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 11 — BUILD + RELEASE
+══════════════════════════════════════════════════════ -->
+<section class="slide" id="build" data-dot="Build">
+  <div class="glow glow--pink"   style="width:400px;height:400px;bottom:-100px;left:-100px;"></div>
+  <div class="glow glow--purple" style="width:300px;height:300px;top:-50px;right:-100px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="tag">Build &amp; Release</div>
+    <h2 class="section-title">Binário <span class="grad-pink">autocontido</span></h2>
+    <p class="subtitle" style="margin-bottom:40px">
+      Assets embutidos via <code style="background:var(--bg3);padding:2px 8px;border-radius:4px;font-size:14px">//go:embed</code> —
+      o binário final não precisa de nada além do sistema operacional.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+      <div>
+        <h3 class="card-title" style="margin-bottom:20px">Build local (macOS/Linux)</h3>
+        <div class="code-block">
+          <div><span class="comment"># Compilar o binário</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">make</span> <span class="arg">build</span></div>
+          <div></div>
+          <div><span class="comment"># Executar</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">./bin/factorydev</span></div>
+          <div></div>
+          <div><span class="comment"># Com versão customizada</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">VERSION=1.0.0</span> <span class="arg">make build</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">./bin/factorydev</span></div>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="card-title" style="margin-bottom:20px">Release para servidor Linux</h3>
+        <div class="code-block">
+          <div><span class="comment"># Gera ambas as arquiteturas</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">make</span> <span class="arg">release</span></div>
+          <div></div>
+          <div><span class="comment"># Binários gerados em dist/</span></div>
+          <div style="color:var(--green)">  dist/factorydev-linux-amd64</div>
+          <div style="color:var(--green)">  dist/factorydev-linux-arm64</div>
+          <div></div>
+          <div><span class="comment"># Deploy direto (sem instalar Go)</span></div>
+          <div><span class="prompt">$</span> <span class="cmd">scp</span> <span class="arg">dist/factorydev-linux-amd64</span></div>
+          <div>      <span class="arg">user@server:/usr/local/bin/factorydev</span></div>
+        </div>
+
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="card" style="padding:16px;border-color:rgba(0,229,160,0.2)">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Variável</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px">FDEV_PORT=7337</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px">FDEV_HOST=127.0.0.1</div>
+          </div>
+          <div class="card" style="padding:16px;border-color:rgba(245,200,66,0.2)">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Dados</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px">~/.fdev/state.json</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px">~/.fdev/keys/</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 12 — TECH STACK GRID
+══════════════════════════════════════════════════════ -->
+<section class="slide slide--center" id="techstack" data-dot="Stack">
+  <div class="glow glow--cyan"   style="width:500px;height:500px;top:-100px;left:-100px;"></div>
+  <div class="glow glow--gold"   style="width:400px;height:400px;bottom:-100px;right:-100px;"></div>
+
+  <div class="w-max fade-in">
+    <div class="tag">Tech Stack</div>
+    <h2 class="section-title">Tecnologias que <span class="grad-all">fazem sentido</span></h2>
+    <p class="subtitle" style="margin:0 auto 48px">
+      Escolhas pragmáticas: sem frameworks pesados, sem build steps, sem surpresas.
+    </p>
+
+    <div class="grid-4">
+      <div class="card" style="text-align:center;border-color:rgba(0,173,216,0.3)">
+        <div style="font-size:32px;margin-bottom:10px">🐹</div>
+        <h3 class="card-title" style="color:var(--cyan)">Go 1.24</h3>
+        <p>Backend, HTTP server, templates, embeds, goroutines para jobs assíncronos</p>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(255,120,0,0.3)">
+        <div style="font-size:32px;margin-bottom:10px">⚡</div>
+        <h3 class="card-title" style="color:var(--orange)">HTMX 2.x</h3>
+        <p>Interações dinâmicas sem escrever JavaScript. Polling, swap, triggers via atributos HTML</p>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(68,170,68,0.3)">
+        <div style="font-size:32px;margin-bottom:10px">🏔️</div>
+        <h3 class="card-title" style="color:#4a4">Alpine.js</h3>
+        <p>Estado local de componentes (tabs, toggles, accordions) de forma declarativa no HTML</p>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(0,212,255,0.2)">
+        <div style="font-size:32px;margin-bottom:10px">🔗</div>
+        <h3 class="card-title" style="color:var(--cyan)">chi</h3>
+        <p>Roteador HTTP idiomático para Go. Leve, sem dependências, middleware padrão net/http</p>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(245,200,66,0.3)">
+        <div style="font-size:32px;margin-bottom:10px">📈</div>
+        <h3 class="card-title" style="color:var(--gold)">gopsutil/v3</h3>
+        <p>Métricas de sistema multiplataforma: CPU, RAM, disco, rede — macOS e Linux</p>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(0,100,255,0.3)">
+        <div style="font-size:32px;margin-bottom:10px">🐳</div>
+        <h3 class="card-title" style="color:#2277ff">Docker SDK</h3>
+        <p>docker/docker client oficial. Containers, imagens, logs, stats — comunicação direta com o daemon</p>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(168,85,247,0.3)">
+        <div style="font-size:32px;margin-bottom:10px">📦</div>
+        <h3 class="card-title" style="color:var(--purple)">go:embed</h3>
+        <p>Templates HTML, CSS e JS embutidos no binário final. Deploy = copiar 1 arquivo</p>
+      </div>
+      <div class="card" style="text-align:center;border-color:rgba(0,229,160,0.2)">
+        <div style="font-size:32px;margin-bottom:10px">💾</div>
+        <h3 class="card-title" style="color:var(--green)">JSON local</h3>
+        <p>Persistência simples em ~/.fdev/state.json. Sem banco de dados, sem migrations, sem setup</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SLIDE 13 — FINAL / CTA
+══════════════════════════════════════════════════════ -->
+<section class="slide slide--center" id="cta" data-dot="Start">
+  <div class="glow glow--cyan"  style="width:700px;height:700px;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+
+  <div class="fade-in">
+    <div class="tag">Pronto para usar</div>
+    <h2 class="section-title" style="font-size:clamp(40px,6vw,72px);margin-bottom:16px">
+      Seu <span class="grad-all">workflow</span>,<br/>sem fricção.
+    </h2>
+    <p class="subtitle" style="margin:0 auto 48px;max-width:560px">
+      FactoryDev roda em <b>localhost:7337</b>, salva tudo em <code style="background:var(--bg3);padding:2px 8px;border-radius:4px">~/.fdev/</code> e não precisa de configuração inicial.
+    </p>
+
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:48px">
+      <a href="http://localhost:7337" target="_blank" class="btn btn--primary" style="font-size:16px;padding:16px 40px">
+        ▶ Abrir FactoryDev
+      </a>
+      <a href="#hero" class="btn btn--ghost" style="font-size:16px;padding:16px 40px">
+        ↑ Voltar ao início
+      </a>
+    </div>
+
+    <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap">
+      <div class="tech-chip"><span style="color:var(--cyan)">make dev</span> <span style="color:var(--text3)">→ development</span></div>
+      <div class="tech-chip"><span style="color:var(--gold)">make build</span> <span style="color:var(--text3)">→ binário local</span></div>
+      <div class="tech-chip"><span style="color:var(--green)">make release</span> <span style="color:var(--text3)">→ Linux deploy</span></div>
+      <div class="tech-chip"><span style="color:var(--text2)">MIT License</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════════ -->
+<script>
+  // ── Repo tabs ───────────────────────────────────
+  const repoDescContent = {
+    overview: `
+      <ul class="steps-list">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Status ao vivo</strong>
+            <span>Branch atual, arquivos modificados e o hash + mensagem do último commit são lidos do disco em tempo real.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Pull com 1 clique</strong>
+            <span>Executa <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px">git pull</code> no repo e exibe o log de saída ao vivo via polling HTMX.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Novo branch</strong>
+            <span>Cria e faz checkout de um novo branch a partir do HEAD atual, sem abrir terminal.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Abrir terminal no repo</strong>
+            <span>Abre o Terminal.app (macOS via osascript) ou detecta automaticamente o terminal no Linux (gnome, konsole, kitty…).</span>
+          </div>
+        </li>
+      </ul>`,
+
+    config: `
+      <ul class="steps-list">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>git config local do repo</strong>
+            <span>Exibe o conteúdo de <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px">.git/config</code> — user, remotes e branches configurados para este repositório.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Remote origin configurado</strong>
+            <span>Você vê qual URL SSH está sendo usada, confirmando que a conta correta foi aplicada no clone.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Branch tracking</strong>
+            <span>Mostra o remote e o ref de merge de cada branch local — útil para identificar repositórios com upstream desconfigurado.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Identidade ativa</strong>
+            <span>Se houver uma regra <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px">includeIf</code> aplicada, o user.name e email do diretório aparecem aqui.</span>
+          </div>
+        </li>
+      </ul>`,
+
+    commits: `
+      <ul class="steps-list">
+        <li>
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Histórico paginado</strong>
+            <span>Lista os últimos N commits com hash abreviado, mensagem, autor e data relativa. Botão "Ver mais" carrega a próxima página.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Hash clicável</strong>
+            <span>Cada hash abre os detalhes do commit: diff completo, arquivos alterados e metadados do autor.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Dados do git log</strong>
+            <span>Executa <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:11px">git log --oneline</code> internamente — sem dependência de API externa ou token.</span>
+          </div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Contexto de autoria</strong>
+            <span>Autor e data de cada commit confirmam qual identidade git estava ativa no momento do commit — ótimo para auditar projetos multi-conta.</span>
+          </div>
+        </li>
+      </ul>`
+  }
+
+  function switchRepoTab(tab) {
+    // Atualiza botões
+    document.querySelectorAll('.repo-tab-btn').forEach(btn => {
+      btn.classList.toggle('repo-tab-btn--active', btn.dataset.tab === tab)
+    })
+    // Alterna painéis
+    document.querySelectorAll('.repo-tab-panel').forEach(p => p.style.display = 'none')
+    document.getElementById('repo-tab-' + tab).style.display = 'block'
+    // Atualiza descrição lateral
+    document.getElementById('repos-desc').innerHTML = repoDescContent[tab]
+  }
+
+  // Inicializa com overview
+  switchRepoTab('overview')
+
+  // ── Build nav dots ──────────────────────────────
+  const slides = document.querySelectorAll('.slide[data-dot]')
+  const dotsContainer = document.getElementById('side-dots')
+
+  slides.forEach((slide, i) => {
+    const dot = document.createElement('div')
+    dot.className = 'dot'
+    dot.title = slide.dataset.dot
+    dot.addEventListener('click', () => slide.scrollIntoView({ behavior: 'smooth' }))
+    dotsContainer.appendChild(dot)
+  })
+
+  const dots = dotsContainer.querySelectorAll('.dot')
+
+  // ── IntersectionObserver for active dot + fade-in ──
+  const fadeEls = document.querySelectorAll('.fade-in')
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+      }
+    })
+  }, { threshold: 0.15 })
+
+  fadeEls.forEach(el => observer.observe(el))
+
+  // Dot active state
+  const slideObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = Array.from(slides).indexOf(entry.target)
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx))
+      }
+    })
+  }, { threshold: 0.5 })
+
+  slides.forEach(slide => slideObserver.observe(slide))
+
+  // ── Keyboard navigation ─────────────────────────
+  document.addEventListener('keydown', (e) => {
+    const active = document.querySelector('.dot.active')
+    if (!active) return
+    const idx = Array.from(dots).indexOf(active)
+    if ((e.key === 'ArrowDown' || e.key === 'PageDown') && idx < slides.length - 1) {
+      slides[idx + 1].scrollIntoView({ behavior: 'smooth' })
+    }
+    if ((e.key === 'ArrowUp' || e.key === 'PageUp') && idx > 0) {
+      slides[idx - 1].scrollIntoView({ behavior: 'smooth' })
+    }
+  })
+</script>
+</body>
+</html>
