@@ -7,15 +7,15 @@
     </div>
     <div style="display:flex;gap:8px">
       <button class="fdev-btn fdev-btn--ghost"
-        hx-get="/tools/ssh/keys/new"
+        hx-get="/tools/ssh/import"
         hx-target="#drawer-content"
-        title="Cria apenas o par de chaves, sem configuração SSH">
-        Nova Chave
+        title="Importar contas de ~/.ssh/config">
+        Importar Config
       </button>
       <button class="fdev-btn"
         hx-get="/tools/ssh/accounts/new"
         hx-target="#drawer-content"
-        title="Cria chave + configuração completa de alias SSH">
+        title="Nova conta SSH com alias completo">
         Nova Conta
       </button>
     </div>
@@ -122,12 +122,6 @@
           {{end}}
 
           <div class="fdev-actions">
-            <button class="fdev-btn fdev-btn--ghost"
-              hx-post="/tools/ssh/accounts/{{.ID}}/generate-key"
-              hx-target="#main-content"
-              {{if .HasKey}}hx-confirm="Chave já existe. Deseja gerar uma nova (sobrescreve a atual)?"{{end}}>
-              {{if .HasKey}}Regenerar Chave{{else}}Gerar Chave{{end}}
-            </button>
             {{if not .IsSimpleKey}}
             <button class="fdev-btn fdev-btn--ghost"
               hx-post="/tools/ssh/accounts/{{.ID}}/preview-apply"

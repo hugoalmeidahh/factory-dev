@@ -1,0 +1,21 @@
+{{define "keys/export-result.html"}}
+<div class="fdev-form">
+  <p style="font-size:14px;color:#5d5950">
+    Chave <strong>{{.Name}}</strong> — {{if eq .Which "priv"}}Privada{{else}}Pública{{end}} (Base64)
+  </p>
+  <div class="fdev-code-block">
+    <div class="fdev-code-head">
+      <strong>Base64</strong>
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="button"
+        onclick="copyElContent(this, 'export-b64')">Copiar</button>
+    </div>
+    <pre id="export-b64" style="max-height:320px;overflow:auto;word-break:break-all">{{.B64}}</pre>
+  </div>
+  {{if eq .Which "priv"}}
+  <p class="warn" style="font-size:12px">⚠ A chave privada nunca deve ser compartilhada.</p>
+  {{end}}
+  <div class="fdev-actions">
+    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Fechar</button>
+  </div>
+</div>
+{{end}}

@@ -1,0 +1,39 @@
+{{define "git/signing-setup.html"}}
+<div class="fdev-drawer-header">
+  <h2>Configurar Commit Signing</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body">
+  <div class="fdev-stat-card" style="margin-bottom:16px">
+    <div style="font-size:13px;color:#5d5950;margin-bottom:4px">Identidade</div>
+    <div style="font-size:15px;font-weight:600">{{.Identity.Name}}</div>
+    <div style="font-size:13px;color:#5d5950">{{.Identity.Email}}</div>
+    {{if .KeyName}}<div style="font-size:13px;margin-top:4px">Chave: <strong>{{.KeyName}}</strong></div>{{end}}
+  </div>
+
+  <p style="font-size:13px;color:#2e2b26;margin:0 0 12px">
+    Aplicará estas configurações globalmente:
+  </p>
+  <pre style="font-size:12px;font-family:monospace;background:#f7f3e9;padding:10px;border-radius:8px;margin:0 0 16px">gpg.format = ssh
+user.signingkey = {{if .Identity}}[chave pública da identidade]{{end}}
+commit.gpgsign = true</pre>
+
+  {{if .PubKey}}
+  <div class="fdev-code-block" style="margin-bottom:16px">
+    <div class="fdev-code-head">
+      <span style="font-size:12px;color:#5d5950">Chave pública (adicione no GitHub/GitLab → SSH signing keys)</span>
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+        onclick="copyElContent(this, 'signing-pubkey')">Copiar</button>
+    </div>
+    <pre id="signing-pubkey">{{.PubKey}}</pre>
+  </div>
+  {{end}}
+
+  <form hx-post="/tools/git/identities/{{.Identity.ID}}/signing" hx-swap="none">
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+      <button class="fdev-btn" type="submit">Aplicar Signing</button>
+    </div>
+  </form>
+</div>
+{{end}}

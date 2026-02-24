@@ -1,5 +1,10 @@
 {{define "ssh/account-drawer.html"}}
-<form class="fdev-form" hx-post="{{.SubmitURL}}" hx-target="#main-content">
+<form class="fdev-form" hx-post="{{.SubmitURL}}" hx-target="#main-content"
+  x-data="{
+    keyMode: '{{if .Account.KeyID}}existing{{else}}new{{end}}',
+    keyType: 'ed25519',
+    showPassphrase: false
+  }">
   {{if .IsEdit}}<input type="hidden" name="id" value="{{.Account.ID}}">{{end}}
 
   <label>Nome</label>
@@ -32,9 +37,96 @@
   <input name="gitUserEmail" value="{{.Account.GitUserEmail}}">
   {{with index .Errors "gitUserEmail"}}<small class="err">{{.}}</small>{{end}}
 
+  {{/* ── Seção de Chave SSH ── */}}
+  <div class="fdev-key-section">
+    <div class="fdev-key-section-header">
+      <strong>Chave SSH</strong>
+      <div class="fdev-toggle-group">
+        <button type="button" class="fdev-toggle-btn" :class="{active: keyMode === 'existing'}"
+          @click="keyMode = 'existing'">Existente</button>
+        <button type="button" class="fdev-toggle-btn" :class="{active: keyMode === 'new'}"
+          @click="keyMode = 'new'">Nova Chave</button>
+      </div>
+    </div>
+
+    {{/* Selecionar chave existente */}}
+    <div x-show="keyMode === 'existing'">
+      <input type="hidden" name="keyMode" value="existing" x-bind:disabled="keyMode !== 'existing'">
+      {{if .Keys}}
+      <label>Selecionar Chave</label>
+      <select name="keyID">
+        <option value="">— nenhuma —</option>
+        {{range .Keys}}
+        <option value="{{.ID}}" {{if eq $.Account.KeyID .ID}}selected{{end}}>
+          {{.Name}} ({{.Type}}{{if .Protected}} · protegida{{end}})
+        </option>
+        {{end}}
+      </select>
+      <small>Gerencie chaves em <a hx-get="/tools/keys" hx-target="#main-content" hx-push-url="/tools/keys" style="cursor:pointer;text-decoration:underline">Key Manager</a>.</small>
+      {{else}}
+      <div class="fdev-info-box">
+        Nenhuma chave disponível. <a hx-get="/tools/keys" hx-target="#main-content" hx-push-url="/tools/keys" style="cursor:pointer;text-decoration:underline">Crie uma no Key Manager</a> ou selecione "Nova Chave" acima.
+      </div>
+      {{end}}
+    </div>
+
+    {{/* Criar nova chave inline */}}
+    <div x-show="keyMode === 'new'">
+      <input type="hidden" name="keyMode" value="new" x-bind:disabled="keyMode !== 'new'">
+
+      <label>Nome da Chave</label>
+      <input name="newKeyName" placeholder="Ex: GitHub Hugo">
+      {{with index .Errors "newKeyName"}}<small class="err">{{.}}</small>{{end}}
+
+      <label>Tipo</label>
+      <div class="fdev-radio-group">
+        <label class="fdev-radio-label">
+          <input type="radio" name="newKeyType" value="ed25519" x-model="keyType" checked> Ed25519
+        </label>
+        <label class="fdev-radio-label">
+          <input type="radio" name="newKeyType" value="rsa" x-model="keyType"> RSA
+        </label>
+        <label class="fdev-radio-label">
+          <input type="radio" name="newKeyType" value="ecdsa" x-model="keyType"> ECDSA
+        </label>
+      </div>
+
+      <div x-show="keyType === 'rsa' || keyType === 'ecdsa'">
+        <label>Bits</label>
+        <select name="newKeyBits">
+          <template x-if="keyType === 'rsa'">
+            <span>
+              <option value="2048">2048</option>
+              <option value="3072">3072</option>
+              <option value="4096" selected>4096</option>
+            </span>
+          </template>
+          <template x-if="keyType === 'ecdsa'">
+            <span>
+              <option value="256" selected>P-256</option>
+              <option value="384">P-384</option>
+              <option value="521">P-521</option>
+            </span>
+          </template>
+        </select>
+      </div>
+
+      <label>Comentário <small>(opcional)</small></label>
+      <input name="newKeyComment" placeholder="Ex: hugo@laptop">
+
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" x-model="showPassphrase"> Passphrase
+      </label>
+      <div x-show="showPassphrase">
+        <input type="password" name="newKeyPassphrase" placeholder="Passphrase (opcional)">
+        <small class="warn">Chaves com passphrase exigem ssh-agent carregado para git clone.</small>
+      </div>
+    </div>
+  </div>
+
   <div class="fdev-actions">
-    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Cancel</button>
-    <button type="submit" class="fdev-btn">Save</button>
+    <button type="button" class="fdev-btn fdev-btn--ghost" onclick="closeDrawer()">Cancelar</button>
+    <button type="submit" class="fdev-btn">Salvar</button>
   </div>
 </form>
 

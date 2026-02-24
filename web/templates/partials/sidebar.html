@@ -5,6 +5,13 @@
        @popstate.window="page = inferPage()">
   <div class="fdev-logo">FactoryDev</div>
   <nav class="fdev-nav">
+    <a class="fdev-nav-item" :class="{active: page === 'keys'}"
+       href="/tools/keys"
+       hx-get="/tools/keys"
+       hx-target="#main-content"
+       hx-push-url="/tools/keys">
+      Key Manager
+    </a>
     <a class="fdev-nav-item" :class="{active: page === 'ssh'}"
        href="/tools/ssh/accounts"
        hx-get="/tools/ssh/accounts"
@@ -18,6 +25,34 @@
        hx-target="#main-content"
        hx-push-url="/tools/repos">
       Repositories
+    </a>
+    <a class="fdev-nav-item" :class="{active: page === 'git'}"
+       href="/tools/git"
+       hx-get="/tools/git"
+       hx-target="#main-content"
+       hx-push-url="/tools/git">
+      Git Identities
+    </a>
+    <a class="fdev-nav-item" :class="{active: page === 'servers'}"
+       href="/tools/servers"
+       hx-get="/tools/servers"
+       hx-target="#main-content"
+       hx-push-url="/tools/servers">
+      Servers
+    </a>
+    <a class="fdev-nav-item" :class="{active: page === 'system'}"
+       href="/tools/system"
+       hx-get="/tools/system"
+       hx-target="#main-content"
+       hx-push-url="/tools/system">
+      System Info
+    </a>
+    <a class="fdev-nav-item" :class="{active: page === 'docker'}"
+       href="/tools/docker"
+       hx-get="/tools/docker"
+       hx-target="#main-content"
+       hx-push-url="/tools/docker">
+      Docker
     </a>
     <a class="fdev-nav-item" :class="{active: page === 'doctor'}"
        href="/doctor"

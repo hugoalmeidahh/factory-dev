@@ -1,0 +1,73 @@
+{{define "docker/dashboard.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Docker Manager</h1>
+      <p>Gerencie containers e imagens localmente.</p>
+    </div>
+    <!-- Status do daemon + botão iniciar, na mesma linha do título -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div id="docker-status-slot"
+        hx-get="/tools/docker/status"
+        hx-trigger="load, every 8s"
+        hx-swap="outerHTML"
+        style="display:flex;align-items:center;gap:8px">
+        <span class="fdev-spinner" style="width:14px;height:14px;border-width:2px"></span>
+      </div>
+      {{if .Available}}
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+        hx-get="/tools/docker/images"
+        hx-target="#docker-images-slot"
+        hx-swap="innerHTML">
+        ↻ Imagens
+      </button>
+      <button class="fdev-btn"
+        hx-get="/tools/docker/templates/new"
+        hx-target="#drawer-content">
+        + Container
+      </button>
+      {{end}}
+    </div>
+  </header>
+
+  {{if not .Available}}
+  <div class="fdev-empty">
+    <h2>Docker não está rodando</h2>
+    <p>O Docker Desktop não foi detectado. Use o botão <strong>▶ Iniciar Docker</strong>
+       no cabeçalho ou inicie manualmente e aguarde — a página atualiza sozinha.</p>
+  </div>
+  {{else}}
+
+  <!-- Containers: auto-refresh a cada 10s -->
+  <div style="margin-bottom:20px">
+    <h3 style="font-size:15px;margin:0 0 8px">Containers</h3>
+    <div id="docker-containers"
+      hx-get="/tools/docker/containers"
+      hx-trigger="load, every 10s"
+      hx-swap="innerHTML">
+      <div class="fdev-clone-running">
+        <span class="fdev-spinner"></span>
+        Carregando containers…
+      </div>
+    </div>
+  </div>
+
+  <!-- Imagens -->
+  <div>
+    <h3 style="font-size:15px;margin:0 0 8px">Imagens</h3>
+    <div id="docker-images-slot"
+      hx-get="/tools/docker/images"
+      hx-trigger="load"
+      hx-swap="innerHTML">
+      <div class="fdev-clone-running">
+        <span class="fdev-spinner"></span>
+        Carregando imagens…
+      </div>
+    </div>
+  </div>
+
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "docker/dashboard.html" .}}{{end}}

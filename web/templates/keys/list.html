@@ -1,0 +1,139 @@
+{{define "keys/list.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Key Manager</h1>
+      <p>Gerencie chaves criptográficas SSH independente das contas.</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="fdev-btn fdev-btn--ghost"
+        hx-get="/tools/keys/import"
+        hx-target="#drawer-content"
+        title="Importar chaves existentes de outro diretório">
+        Importar
+      </button>
+      <button class="fdev-btn"
+        hx-get="/tools/keys/new"
+        hx-target="#drawer-content">
+        Nova Chave
+      </button>
+    </div>
+  </header>
+
+  {{if eq (len .Keys) 0}}
+  <div class="fdev-empty">
+    <svg viewBox="0 0 24 24" width="64" height="64" aria-hidden="true"><path fill="currentColor" d="M7 14a5 5 0 1 1 4.9-6H20v2h-2v2h-2v2h-2v2h-2.1A5 5 0 0 1 7 14zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+    <h2>Nenhuma chave registrada</h2>
+    <p>Crie uma nova chave ou importe chaves existentes de <code>~/.ssh/</code>.</p>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="fdev-btn fdev-btn--ghost"
+        hx-get="/tools/keys/import"
+        hx-target="#drawer-content">Importar</button>
+      <button class="fdev-btn"
+        hx-get="/tools/keys/new"
+        hx-target="#drawer-content">Nova Chave</button>
+    </div>
+  </div>
+  {{else}}
+  <div class="fdev-list">
+    {{range .Keys}}
+    <article class="fdev-list-card">
+      <div class="fdev-list-card-header">
+        <button class="fdev-list-card-toggle" type="button" onclick="toggleAccountDetails('key-{{.ID}}')">
+          <div class="fdev-list-card-info">
+            <h3 class="fdev-list-card-name">{{.Name}}</h3>
+            <p class="fdev-list-card-sub">
+              {{if eq .Type "ed25519"}}Ed25519{{else if eq .Type "rsa"}}RSA{{if .Bits}} {{.Bits}}{{end}}{{else if eq .Type "ecdsa"}}ECDSA{{if .Bits}} P-{{.Bits}}{{end}}{{else}}{{.Type}}{{end}}
+              · alias: {{.Alias}}
+              {{if .Comment}}· {{.Comment}}{{end}}
+            </p>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            {{if .Protected}}<span class="fdev-pill fdev-pill--purple">🔒 Passphrase</span>{{end}}
+            {{if eq .Source "imported"}}<span class="fdev-pill fdev-pill--purple">Importada</span>{{end}}
+            <span class="fdev-pill {{if .HasPrivKey}}ok{{else}}warn{{end}}">
+              {{if .HasPrivKey}}Chave OK{{else}}Arquivo ausente{{end}}
+            </span>
+            {{if gt (len .UsedByAccounts) 0}}
+            <span class="fdev-pill" style="background:#e8f0fe;color:#1a3a7c;border-color:#a8c0f0">
+              {{len .UsedByAccounts}} conta(s)
+            </span>
+            {{end}}
+          </div>
+          <span class="fdev-list-card-chevron" id="chevron-key-{{.ID}}">
+            <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M7 10l5 5 5-5z"/></svg>
+          </span>
+        </button>
+
+        <div class="fdev-list-card-actions">
+          <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+            hx-delete="/tools/keys/{{.ID}}"
+            hx-target="#main-content"
+            hx-confirm="Excluir chave {{.Name}}?{{if gt (len .UsedByAccounts) 0}} Ela está em uso por {{len .UsedByAccounts}} conta(s).{{end}}">
+            Excluir
+          </button>
+        </div>
+      </div>
+
+      <div id="account-details-key-{{.ID}}" class="fdev-list-card-details hidden">
+        <div class="fdev-list-card-body">
+
+          {{if gt (len .UsedByAccounts) 0}}
+          <div class="fdev-info-box">
+            Usada pelas contas: <strong>{{range $i, $a := .UsedByAccounts}}{{if $i}}, {{end}}{{$a}}{{end}}</strong>
+          </div>
+          {{end}}
+
+          <div class="fdev-meta">
+            <div><strong>Alias:</strong> <code>{{.Alias}}</code></div>
+            <div><strong>Chave privada:</strong> <code>{{.PrivateKeyPath}}</code></div>
+            <div><strong>Chave pública:</strong> <code>{{.PublicKeyPath}}</code></div>
+            {{if .OriginalPath}}<div><strong>Importada de:</strong> <code>{{.OriginalPath}}</code></div>{{end}}
+            <div><strong>Criada em:</strong> {{.CreatedAt.Format "02/01/2006 15:04"}}</div>
+          </div>
+
+          {{if .HasPubKey}}
+          <div class="fdev-code-block">
+            <div class="fdev-code-head">
+              <strong>Chave Pública</strong>
+              <div style="display:flex;gap:6px">
+                <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="button"
+                  onclick="copyElContent(this, 'kpub-{{.ID}}')">Copiar</button>
+                <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="button"
+                  onclick="toggleSecret('kpub-{{.ID}}', this)">Mostrar</button>
+                <a class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+                  href="#" onclick="event.preventDefault()"
+                  hx-get="/tools/keys/{{.ID}}/export?which=pub"
+                  hx-target="#drawer-content">Base64</a>
+              </div>
+            </div>
+            <pre id="kpub-{{.ID}}" class="secret hidden">{{.PublicKeyContent}}</pre>
+          </div>
+          {{end}}
+
+          <div class="fdev-actions">
+            {{if .Protected}}
+            <form hx-post="/tools/keys/{{.ID}}/regen-pub" hx-target="#main-content" style="display:flex;gap:6px;align-items:center">
+              <input type="password" name="passphrase" placeholder="Passphrase" style="padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;width:140px">
+              <button type="submit" class="fdev-btn fdev-btn--ghost fdev-btn--sm">Regen Pub Key</button>
+            </form>
+            {{else}}
+            <form hx-post="/tools/keys/{{.ID}}/regen-pub" hx-target="#main-content" style="display:inline">
+              <button type="submit" class="fdev-btn fdev-btn--ghost fdev-btn--sm">Regen Pub Key</button>
+            </form>
+            {{end}}
+            <a class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+               href="#" onclick="event.preventDefault()"
+               hx-get="/tools/keys/{{.ID}}/export?which=priv"
+               hx-target="#drawer-content">Export Priv Base64</a>
+          </div>
+        </div>
+      </div>
+    </article>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "keys/list.html" .}}{{end}}

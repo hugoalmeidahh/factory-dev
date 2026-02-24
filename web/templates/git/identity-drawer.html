@@ -1,0 +1,41 @@
+{{define "git/identity-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>{{if .IsEdit}}Editar Identidade{{else}}Nova Identidade Git{{end}}</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body">
+  <form class="fdev-form"
+    hx-post="{{.SubmitURL}}"
+    hx-target="#main-content"
+    hx-push-url="/tools/git">
+    <label style="font-size:14px;font-weight:600">Nome *</label>
+    <input type="text" name="name"
+      value="{{if .Identity}}{{.Identity.Name}}{{end}}"
+      placeholder="ex: João (Pessoal)" required>
+
+    <label style="font-size:14px;font-weight:600">E-mail *</label>
+    <input type="email" name="email"
+      value="{{if .Identity}}{{.Identity.Email}}{{end}}"
+      placeholder="voce@email.com" required>
+
+    <label style="font-size:14px;font-weight:600">Chave SSH (para signing)</label>
+    <select name="keyID" style="border:1px solid var(--border);border-radius:8px;padding:8px">
+      <option value="">— nenhuma chave vinculada —</option>
+      {{range .Keys}}
+      <option value="{{.ID}}"
+        {{if and $.Identity (eq $.Identity.KeyID .ID)}}selected{{end}}>
+        {{.Name}} ({{.Type}})
+      </option>
+      {{end}}
+    </select>
+    <p style="font-size:12px;color:#5d5950;margin:0">
+      A chave vinculada será usada para commit signing (SSH).
+    </p>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+      <button class="fdev-btn" type="submit">{{if .IsEdit}}Salvar{{else}}Criar{{end}}</button>
+    </div>
+  </form>
+</div>
+{{end}}

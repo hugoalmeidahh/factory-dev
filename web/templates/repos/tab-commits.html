@@ -1,0 +1,28 @@
+{{define "repos/tab-commits.html"}}
+<div class="fdev-tab-content">
+  {{if eq (len .Commits) 0}}
+  <p style="color:#5d5950;font-size:14px">Nenhum commit encontrado.</p>
+  {{else}}
+  <div style="display:grid;gap:4px">
+    {{range .Commits}}
+    <div style="display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <code style="font-family:monospace;font-size:11px;background:#f0ede5;padding:1px 5px;border-radius:4px;flex-shrink:0">{{.Hash}}</code>
+      <span style="font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{.Subject}}</span>
+      <span style="font-size:11px;color:#5d5950;white-space:nowrap">{{.Author}}</span>
+      <span style="font-size:11px;color:#9c9890;white-space:nowrap">{{.Date}}</span>
+    </div>
+    {{end}}
+  </div>
+  {{if .HasMore}}
+  <div style="text-align:center;margin-top:10px">
+    <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+      hx-get="/tools/repos/{{.Repo.ID}}/tab/commits?offset={{.Offset}}"
+      hx-target="closest .fdev-tab-content"
+      hx-swap="innerHTML">
+      Carregar mais…
+    </button>
+  </div>
+  {{end}}
+  {{end}}
+</div>
+{{end}}

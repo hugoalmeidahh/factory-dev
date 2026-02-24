@@ -9,8 +9,11 @@
       <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
         hx-get="/tools/repos"
         hx-target="#main-content"
-        title="Atualizar status de todos os repositórios">
-        ↻ Atualizar
+        title="Atualizar status">↻ Atualizar</button>
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+        hx-get="/tools/repos/scan"
+        hx-target="#drawer-content">
+        Scan Repos
       </button>
       <button class="fdev-btn"
         hx-get="/tools/repos/clone/new"
@@ -32,26 +35,25 @@
       Ir para Accounts
     </button>
     {{else}}
-    <h2>Nenhum repositório clonado ainda</h2>
-    <p>Use <strong>Novo Clone</strong> para clonar um repositório usando uma conta SSH configurada.</p>
-    <button class="fdev-btn"
-      hx-get="/tools/repos/clone/new"
-      hx-target="#drawer-content">
-      Novo Clone
-    </button>
+    <h2>Nenhum repositório ainda</h2>
+    <p>Use <strong>Novo Clone</strong> ou <strong>Scan Repos</strong> para adicionar repositórios.</p>
     {{end}}
   </div>
   {{else}}
   <div class="fdev-list">
     {{range .Repos}}
-    <article class="fdev-list-card">
+    <article class="fdev-list-card" x-data="{open:false,tab:'overview'}">
       <div class="fdev-list-card-header">
-        <div class="fdev-list-card-info">
-          <h3 class="fdev-list-card-name">{{.Name}}</h3>
-          <p class="fdev-list-card-sub">{{.LocalPath}}</p>
-        </div>
+        <button class="fdev-list-card-toggle" @click="open=!open">
+          <div class="fdev-list-card-info">
+            <h3 class="fdev-list-card-name">{{.Name}}</h3>
+            <p class="fdev-list-card-sub">{{.LocalPath}}</p>
+          </div>
+          <span class="fdev-list-card-chevron" :class="{open:open}">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </button>
         <div class="fdev-list-card-actions">
-          {{/* Status dinâmico individual */}}
           <span id="repo-status-{{.ID}}" class="fdev-repo-status-wrap">
             {{if not .Accessible}}
               <span class="fdev-repo-status fdev-repo-status--error">não encontrado</span>
@@ -66,16 +68,54 @@
             hx-get="/tools/repos/{{.ID}}/status"
             hx-target="#repo-status-{{.ID}}"
             hx-swap="innerHTML"
-            title="Atualizar status deste repositório">↻</button>
+            title="Atualizar status">↻</button>
           <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
             hx-delete="/tools/repos/{{.ID}}"
             hx-target="#main-content"
             hx-confirm="Remover {{.Name}} da lista?">Remover</button>
         </div>
       </div>
+
+      <div class="fdev-list-card-details" x-show="open" x-cloak>
+        <!-- Tab bar -->
+        <div class="fdev-tab-bar">
+          <button class="fdev-tab-btn" :class="{active:tab==='overview'}"
+            @click="tab='overview'"
+            hx-get="/tools/repos/{{.ID}}/tab/overview"
+            hx-target="#repo-tab-{{.ID}}"
+            hx-swap="innerHTML"
+            hx-trigger="click">
+            Overview
+          </button>
+          <button class="fdev-tab-btn" :class="{active:tab==='config'}"
+            @click="tab='config'"
+            hx-get="/tools/repos/{{.ID}}/tab/config"
+            hx-target="#repo-tab-{{.ID}}"
+            hx-swap="innerHTML"
+            hx-trigger="click">
+            Config
+          </button>
+          <button class="fdev-tab-btn" :class="{active:tab==='commits'}"
+            @click="tab='commits'"
+            hx-get="/tools/repos/{{.ID}}/tab/commits"
+            hx-target="#repo-tab-{{.ID}}"
+            hx-swap="innerHTML"
+            hx-trigger="click">
+            Commits
+          </button>
+        </div>
+        <!-- Tab content: carregado via HTMX, default overview -->
+        <div id="repo-tab-{{.ID}}"
+          hx-get="/tools/repos/{{.ID}}/tab/overview"
+          hx-trigger="intersect once"
+          hx-swap="innerHTML"
+          class="fdev-list-card-body">
+        </div>
+      </div>
+
       <div class="fdev-list-card-meta-strip">
-        <span><strong>URL:</strong> {{.URL}}</span>
-        <span><strong>Conta:</strong> {{.AccountName}}</span>
+        {{if .URL}}<span><strong>URL:</strong> {{.URL}}</span>{{end}}
+        {{if .AccountName}}<span><strong>Conta:</strong> {{.AccountName}}</span>{{end}}
         <span><strong>Clonado em:</strong> {{.ClonedAt.Format "02/01/2006 15:04"}}</span>
       </div>
     </article>

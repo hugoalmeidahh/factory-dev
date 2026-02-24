@@ -1,0 +1,48 @@
+{{define "git/global-config.html"}}
+<div class="fdev-drawer-header">
+  <h2>Configuração Git Global</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body">
+  <p style="color:#5d5950;font-size:13px;margin:0 0 16px">
+    Modifica o arquivo <code style="font-family:monospace;background:#f0ede5;padding:1px 5px;border-radius:4px">~/.gitconfig</code>.
+  </p>
+  <form class="fdev-form"
+    hx-post="/tools/git/global-config">
+    <label style="font-size:14px;font-weight:600">user.name</label>
+    <input type="text" name="userName"
+      value="{{index .Cfg "user.name"}}"
+      placeholder="Seu Nome">
+
+    <label style="font-size:14px;font-weight:600">user.email</label>
+    <input type="email" name="userEmail"
+      value="{{index .Cfg "user.email"}}"
+      placeholder="voce@email.com">
+
+    <label style="font-size:14px;font-weight:600">commit.gpgsign</label>
+    <select name="gpgSign" style="border:1px solid var(--border);border-radius:8px;padding:8px">
+      <option value="">— não alterar —</option>
+      <option value="true" {{if eq (index .Cfg "commit.gpgsign") "true"}}selected{{end}}>true (habilitar)</option>
+      <option value="false" {{if eq (index .Cfg "commit.gpgsign") "false"}}selected{{end}}>false (desabilitar)</option>
+    </select>
+
+    <label style="font-size:14px;font-weight:600">gpg.format</label>
+    <select name="gpgFormat" style="border:1px solid var(--border);border-radius:8px;padding:8px">
+      <option value="">— não alterar —</option>
+      <option value="ssh" {{if eq (index .Cfg "gpg.format") "ssh"}}selected{{end}}>ssh</option>
+      <option value="openpgp" {{if eq (index .Cfg "gpg.format") "openpgp"}}selected{{end}}>openpgp</option>
+    </select>
+
+    <label style="font-size:14px;font-weight:600">user.signingkey</label>
+    <input type="text" name="signingKey"
+      value="{{index .Cfg "user.signingkey"}}"
+      placeholder="caminho da chave pública ou key-id GPG"
+      style="font-family:monospace">
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Fechar</button>
+      <button class="fdev-btn" type="submit">Salvar</button>
+    </div>
+  </form>
+</div>
+{{end}}

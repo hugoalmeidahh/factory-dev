@@ -1,0 +1,102 @@
+{{define "git/list.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Git Identities</h1>
+      <p>Gerencie identidades git para commits e signing.</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+        hx-get="/tools/git/global-config"
+        hx-target="#drawer-content">
+        Config Global
+      </button>
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+        hx-get="/tools/git/includeif"
+        hx-target="#drawer-content">
+        IncludeIf
+      </button>
+      <button class="fdev-btn"
+        hx-get="/tools/git/identities/new"
+        hx-target="#drawer-content">
+        Nova Identidade
+      </button>
+    </div>
+  </header>
+
+  {{if .GlobalCfg}}
+  <div class="fdev-stat-card" style="margin-bottom:16px">
+    <div style="font-size:12px;color:#5d5950;margin-bottom:6px;font-weight:600">Config global (.gitconfig)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px 24px;font-size:13px">
+      {{if index .GlobalCfg "user.name"}}<span><strong>name:</strong> {{index .GlobalCfg "user.name"}}</span>{{end}}
+      {{if index .GlobalCfg "user.email"}}<span><strong>email:</strong> {{index .GlobalCfg "user.email"}}</span>{{end}}
+      {{if index .GlobalCfg "commit.gpgsign"}}<span><strong>gpgsign:</strong> {{index .GlobalCfg "commit.gpgsign"}}</span>{{end}}
+      {{if index .GlobalCfg "gpg.format"}}<span><strong>gpg.format:</strong> {{index .GlobalCfg "gpg.format"}}</span>{{end}}
+    </div>
+  </div>
+  {{end}}
+
+  {{if eq (len .Identities) 0}}
+  <div class="fdev-empty">
+    <h2>Nenhuma identidade criada</h2>
+    <p>Crie identidades para organizar diferentes perfis de commit (pessoal, trabalho, etc).</p>
+    <button class="fdev-btn"
+      hx-get="/tools/git/identities/new"
+      hx-target="#drawer-content">
+      Nova Identidade
+    </button>
+  </div>
+  {{else}}
+  <div class="fdev-list">
+    {{range .Identities}}
+    <article class="fdev-list-card">
+      <div class="fdev-list-card-header">
+        <div class="fdev-list-card-info">
+          <h3 class="fdev-list-card-name">{{.Name}}</h3>
+          <p class="fdev-list-card-sub">{{.Email}}{{if .KeyName}} · Chave: {{.KeyName}}{{end}}</p>
+        </div>
+        <div class="fdev-list-card-actions">
+          {{if .KeyID}}
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-get="/tools/git/identities/{{.ID}}/signing"
+            hx-target="#drawer-content"
+            title="Configurar signing">
+            🔑 Signing
+          </button>
+          {{end}}
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-get="/tools/git/identities/{{.ID}}/edit"
+            hx-target="#drawer-content">
+            Editar
+          </button>
+          <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+            hx-delete="/tools/git/identities/{{.ID}}"
+            hx-target="#main-content"
+            hx-confirm="Remover identidade {{.Name}}?">
+            Remover
+          </button>
+        </div>
+      </div>
+    </article>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{if .Rules}}
+  <div style="margin-top:20px">
+    <h3 style="font-size:15px;margin:0 0 8px">Regras includeIf</h3>
+    <div style="display:grid;gap:4px">
+      {{range .Rules}}
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:13px">
+        <code style="font-family:monospace;font-size:12px;flex:1">{{.Pattern}}</code>
+        <span style="color:#5d5950">→</span>
+        <code style="font-family:monospace;font-size:12px;flex:1">{{.IncludePath}}</code>
+      </div>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "git/list.html" .}}{{end}}

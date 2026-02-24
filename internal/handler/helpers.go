@@ -6,10 +6,17 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/seuusuario/factorydev/internal/storage"
 	"github.com/seuusuario/factorydev/web"
 )
+
+var tmplFuncs = template.FuncMap{
+	"mb":   func(b uint64) float64 { return float64(b) / 1024 / 1024 },
+	"gb":   func(b uint64) float64 { return float64(b) / 1024 / 1024 / 1024 },
+	"join": func(s []string, sep string) string { return strings.Join(s, sep) },
+}
 
 type PageData struct {
 	Title      string
@@ -19,7 +26,7 @@ type PageData struct {
 }
 
 func (h *Handler) render(w http.ResponseWriter, tmpl string, data any) {
-	t := template.New("root")
+	t := template.New("root").Funcs(tmplFuncs)
 	var err error
 	if isHXRequest(w) {
 		_, err = t.ParseFS(web.FS, "templates/"+tmpl)
@@ -58,7 +65,7 @@ func markHX(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) renderDrawer(w http.ResponseWriter, title, tmpl string, data any) {
-	contentTpl := template.New("drawer-content")
+	contentTpl := template.New("drawer-content").Funcs(tmplFuncs)
 	_, err := contentTpl.ParseFS(web.FS, "templates/"+tmpl)
 	if err != nil {
 		h.operationError(w, "Erro ao abrir drawer", http.StatusInternalServerError)

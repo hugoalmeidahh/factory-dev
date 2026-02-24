@@ -1,0 +1,60 @@
+{{define "git/includeif-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>Regras includeIf</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body">
+  <p style="color:#5d5950;font-size:13px;margin:0 0 16px">
+    Aplica configs git diferentes por diretório.
+    A regra <code style="font-family:monospace">gitdir:/path/projetos/</code> inclui um arquivo
+    de config quando o repositório está naquele diretório.
+  </p>
+
+  {{if .Rules}}
+  <div style="display:grid;gap:4px;margin-bottom:20px">
+    <div style="font-size:13px;font-weight:600;margin-bottom:6px">Regras existentes</div>
+    {{range .Rules}}
+    <div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:12px">
+      <code style="font-family:monospace;flex:1;word-break:break-all">{{.Pattern}}</code>
+      <span style="color:#5d5950">→</span>
+      <code style="font-family:monospace;flex:1;word-break:break-all">{{.IncludePath}}</code>
+      <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+        hx-delete="/tools/git/includeif?pattern={{.Pattern}}"
+        hx-swap="none"
+        hx-confirm="Remover esta regra?">✕</button>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+  <form class="fdev-form"
+    hx-post="/tools/git/includeif"
+    hx-swap="none">
+    <div style="font-size:13px;font-weight:600;margin-bottom:4px">Adicionar nova regra</div>
+
+    <label style="font-size:13px">Diretório (pattern)</label>
+    <input type="text" name="dirPath"
+      placeholder="ex: ~/projetos/trabalho"
+      style="font-family:monospace"
+      required>
+    <p style="font-size:11px;color:#5d5950;margin:0">A trailing slash será adicionada automaticamente.</p>
+
+    <label style="font-size:13px;margin-top:8px">Arquivo de include</label>
+    <input type="text" name="includePath"
+      placeholder="ex: ~/.gitconfig-trabalho"
+      style="font-family:monospace"
+      required>
+
+    {{if .Identities}}
+    <p style="font-size:12px;color:#5d5950;margin:4px 0 0">
+      Sugestão: crie um arquivo por identidade em <code style="font-family:monospace">~/.gitconfig-NOME</code>.
+    </p>
+    {{end}}
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Fechar</button>
+      <button class="fdev-btn" type="submit">Adicionar</button>
+    </div>
+  </form>
+</div>
+{{end}}

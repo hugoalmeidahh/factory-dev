@@ -1,0 +1,55 @@
+{{define "docker/container-list.html"}}
+{{if not .Available}}
+<div class="fdev-empty" style="padding:12px">
+  <p>Docker não disponível.</p>
+</div>
+{{else if eq (len .Containers) 0}}
+<div class="fdev-empty" style="padding:16px">
+  <p>Nenhum container. Use <strong>+ Container</strong> para lançar um.</p>
+</div>
+{{else}}
+<div class="fdev-list">
+  {{range .Containers}}
+  <article class="fdev-list-card">
+    <div class="fdev-list-card-header">
+      <div class="fdev-list-card-info">
+        <h3 class="fdev-list-card-name" style="font-size:14px">{{.Name}}</h3>
+        <p class="fdev-list-card-sub">{{.Image}} · {{.Ports}}</p>
+      </div>
+      <div class="fdev-list-card-actions">
+        <span class="fdev-docker-status fdev-docker-status--{{.State}}">{{.State}}</span>
+        {{if eq .State "running"}}
+        <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+          hx-get="/tools/docker/containers/{{.ID}}/logs"
+          hx-target="#drawer-content">
+          Logs
+        </button>
+        <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+          hx-post="/tools/docker/containers/{{.ID}}/stop">
+          Parar
+        </button>
+        <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+          hx-post="/tools/docker/containers/{{.ID}}/restart">
+          Reiniciar
+        </button>
+        {{else}}
+        <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+          hx-post="/tools/docker/containers/{{.ID}}/start">
+          Iniciar
+        </button>
+        {{end}}
+        <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+          hx-post="/tools/docker/containers/{{.ID}}/remove"
+          hx-confirm="Remover container {{.Name}}?">
+          Remover
+        </button>
+      </div>
+    </div>
+    <div style="padding:2px 16px 8px;font-size:12px;color:#5d5950">
+      ID: <code style="font-family:monospace">{{.ID}}</code> · {{.Status}}
+    </div>
+  </article>
+  {{end}}
+</div>
+{{end}}
+{{end}}

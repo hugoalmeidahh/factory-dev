@@ -2,18 +2,36 @@ package storage
 
 import "time"
 
-const CurrentSchema = 1
+const CurrentSchema = 3
 
 type Storage interface {
 	LoadState() (*State, error)
 	SaveState(*State) error
 }
 
+type Key struct {
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	Alias          string    `json:"alias"`          // dir ~/.fdev/keys/<alias>/
+	Type           string    `json:"type"`           // "ed25519", "rsa", "ecdsa"
+	Bits           int       `json:"bits,omitempty"` // RSA 2048/3072/4096; ECDSA 256/384/521
+	Comment        string    `json:"comment"`
+	PrivateKeyPath string    `json:"privateKeyPath"`
+	PublicKeyPath  string    `json:"publicKeyPath"`
+	Protected      bool      `json:"protected"`      // tem passphrase
+	Source         string    `json:"source"`         // "generated" | "imported"
+	OriginalPath   string    `json:"originalPath,omitempty"`
+	CreatedAt      time.Time `json:"createdAt"`
+}
+
 type State struct {
-	SchemaVersion int          `json:"schemaVersion"`
-	Accounts      []Account    `json:"accounts"`
-	Repositories  []Repository `json:"repositories"`
-	UpdatedAt     time.Time    `json:"updatedAt"`
+	SchemaVersion int           `json:"schemaVersion"`
+	Keys          []Key         `json:"keys"`
+	Accounts      []Account     `json:"accounts"`
+	Repositories  []Repository  `json:"repositories"`
+	Servers       []Server      `json:"servers"`
+	Identities    []GitIdentity `json:"identities"`
+	UpdatedAt     time.Time     `json:"updatedAt"`
 }
 
 type Repository struct {
@@ -31,16 +49,38 @@ type Account struct {
 	Provider     string    `json:"provider"`
 	HostName     string    `json:"hostName"`
 	HostAlias    string    `json:"hostAlias"`
-	IdentityFile string    `json:"identityFile"`
+	KeyID        string    `json:"keyId,omitempty"`
 	GitUserName  string    `json:"gitUserName"`
 	GitUserEmail string    `json:"gitUserEmail"`
-	KeyType      string    `json:"keyType"`     // "ed25519" (padrão) ou "rsa4096"
-	IsSimpleKey  bool      `json:"isSimpleKey"` // true = criado sem config SSH completa
+	// Legacy fields — kept as omitempty for backward compat / migration
+	IdentityFile string    `json:"identityFile,omitempty"`
+	KeyType      string    `json:"keyType,omitempty"`
+	IsSimpleKey  bool      `json:"isSimpleKey,omitempty"`
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
-// EffectiveKeyType retorna o tipo da chave, defaultando para "ed25519".
+type GitIdentity struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	KeyID     string    `json:"keyId,omitempty"` // referência a Key para commit signing
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type Server struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Host        string    `json:"host"`
+	Port        int       `json:"port"` // default 22
+	User        string    `json:"user"`
+	KeyID       string    `json:"keyId,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Tags        []string  `json:"tags,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+// EffectiveKeyType retorna o tipo da chave legado, defaultando para "ed25519".
 func (a Account) EffectiveKeyType() string {
 	if a.KeyType == "" {
 		return "ed25519"
