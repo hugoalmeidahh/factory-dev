@@ -1,0 +1,49 @@
+{{define "repos/pull-all-progress.html"}}
+<div id="pull-all-slot"
+  {{if not .Done}}
+  hx-get="/tools/repos/pull-all/{{.ID}}"
+  hx-trigger="every 2s"
+  hx-swap="outerHTML"
+  {{end}}
+  style="margin-bottom:16px;padding:14px;border-radius:10px;border:1px solid var(--border);background:#fdfcf9">
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <strong style="font-size:13px;color:var(--text)">
+      {{if .Force}}⚡ Pull Force — todos os repositórios{{else}}⇩ Pull — todos os repositórios{{end}}
+    </strong>
+    {{if not .Done}}
+    <span class="fdev-spinner"></span>
+    {{else}}
+    <span style="font-size:12px;color:#5d5950">concluído</span>
+    {{end}}
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:3px">
+    {{range .Results}}
+    <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;
+                border-radius:6px;background:#f8f6f0;font-size:12px">
+      <span style="flex:1;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+            title="{{.RepoName}}">{{.RepoName}}</span>
+      {{if not .Done}}
+        <span class="fdev-spinner" style="width:13px;height:13px;border-width:2px"></span>
+        <span style="color:#5d5950;font-size:11px">aguardando…</span>
+      {{else if .OK}}
+        <span style="color:#0d6c4f;font-weight:700">✓</span>
+        <span style="color:#0d6c4f;font-size:11px">ok</span>
+      {{else}}
+        <span style="color:#b91c1c;font-weight:700">✗</span>
+        <span style="color:#b91c1c;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px"
+              title="{{.Error}}">{{.Error}}</span>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+
+  {{if .Done}}
+  <div style="margin-top:10px;display:flex;justify-content:flex-end">
+    <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+      onclick="document.getElementById('pull-all-slot').remove()">✕ Fechar</button>
+  </div>
+  {{end}}
+</div>
+{{end}}

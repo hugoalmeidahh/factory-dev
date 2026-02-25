@@ -36,6 +36,24 @@ type DockerJob struct {
 	Error  string
 }
 
+// PullAllResult representa o resultado do pull de um repositório específico.
+type PullAllResult struct {
+	RepoName string
+	Done     bool
+	OK       bool
+	Output   string
+	Error    string
+}
+
+// PullAllJob representa um pull de todos os repositórios gerenciados.
+type PullAllJob struct {
+	ID      string
+	Done    bool
+	Force   bool
+	Total   int
+	Results []PullAllResult
+}
+
 type Handler struct {
 	app       *app.App
 	cloneJobs map[string]*CloneJob
@@ -43,6 +61,9 @@ type Handler struct {
 	// Pull jobs
 	pullJobs map[string]*GitOpJob
 	pullMu   sync.Mutex
+	// Pull All jobs
+	pullAllJobs map[string]*PullAllJob
+	pullAllMu   sync.Mutex
 	// Server test/connect jobs
 	serverTestJobs map[string]*GitOpJob
 	serverTestMu   sync.Mutex
@@ -59,6 +80,7 @@ func New(a *app.App) *Handler {
 		app:            a,
 		cloneJobs:      make(map[string]*CloneJob),
 		pullJobs:       make(map[string]*GitOpJob),
+		pullAllJobs:    make(map[string]*PullAllJob),
 		serverTestJobs: make(map[string]*GitOpJob),
 		sendFileJobs:   make(map[string]*GitOpJob),
 		dockerJobs:     make(map[string]*DockerJob),

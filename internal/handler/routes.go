@@ -61,8 +61,12 @@ func (h *Handler) Routes() http.Handler {
 	// Pull
 	r.Post("/tools/repos/{id}/pull", h.StartPullJob)
 	r.Get("/tools/repos/pull-jobs/{jobId}", h.PullJobStatus)
+	// Pull All
+	r.Post("/tools/repos/pull-all", h.StartPullAllJob)
+	r.Get("/tools/repos/pull-all/{id}", h.PullAllJobStatus)
 	// Branch + config + terminal
 	r.Post("/tools/repos/{id}/branch", h.NewBranchHandler)
+	r.Post("/tools/repos/{id}/checkout", h.CheckoutBranch)
 	r.Get("/tools/repos/{id}/tab/{tab}", h.GetRepoTab)
 	r.Post("/tools/repos/{id}/git-config", h.SetRepoGitConfigHandler)
 	r.Post("/tools/repos/{id}/terminal", h.OpenRepoTerminal)

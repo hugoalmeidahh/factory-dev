@@ -5,18 +5,41 @@
 </div>
 <div class="fdev-drawer-body">
   <p style="color:#5d5950;font-size:14px;margin:0 0 16px">
-    Busca repositórios git em um diretório (até 3 níveis de profundidade).
+    Busca repositórios git em um diretório (até 4 níveis de profundidade).
   </p>
-  <form class="fdev-form" style="margin-bottom:16px"
+  <form class="fdev-form" style="margin-bottom:0"
     hx-post="/tools/repos/scan/validate"
     hx-target="#scan-preview-slot"
     hx-swap="innerHTML">
+
     <label style="font-size:14px;font-weight:600">Diretório raiz</label>
     <input type="text" name="scanPath" value="{{.DefaultPath}}"
       placeholder="ex: /Users/você/projetos"
       style="font-family:monospace" required>
-    <button class="fdev-btn" type="submit">Escanear</button>
+
+    <details style="margin-top:12px">
+      <summary style="font-size:13px;font-weight:600;cursor:pointer;color:#5d5950;user-select:none">
+        ⚙ Diretórios ignorados <span style="font-weight:400;font-size:12px">(clique para ajustar)</span>
+      </summary>
+      <div style="margin-top:10px;padding:12px;background:#f8f6f0;border-radius:8px;border:1px solid var(--border)">
+        <p style="font-size:12px;color:#5d5950;margin:0 0 10px">
+          Marcados = ignorados durante o scan. Desmarque para incluir.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px">
+          {{range .ExcludeOptions}}
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+            <input type="checkbox" name="excludeDirs" value="{{.Name}}"
+              {{if .Default}}checked{{end}}
+              style="width:14px;height:14px;accent-color:var(--accent)">
+            <code style="font-size:12px;background:#ebe8e0;padding:1px 5px;border-radius:4px">{{.Name}}</code>
+          </label>
+          {{end}}
+        </div>
+      </div>
+    </details>
+
+    <button class="fdev-btn" type="submit" style="margin-top:14px">Escanear</button>
   </form>
-  <div id="scan-preview-slot"></div>
+  <div id="scan-preview-slot" style="margin-top:16px"></div>
 </div>
 {{end}}

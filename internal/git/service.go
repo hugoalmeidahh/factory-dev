@@ -176,6 +176,114 @@ func (s *Service) Pull(ctx context.Context, localPath, identityFile string) (str
 	return string(out), err
 }
 
+// PullForce executa git fetch --all + git reset --hard @{u},
+// descartando mudanças locais e sincronizando com o upstream.
+func (s *Service) PullForce(ctx context.Context, localPath, identityFile string) (string, error) {
+	var env []string
+	if identityFile != "" {
+		env = append(os.Environ(),
+			"GIT_SSH_COMMAND=ssh -i "+identityFile+" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new",
+		)
+	}
+
+	fetchCmd := exec.CommandContext(ctx, "git", "-C", localPath, "fetch", "--all")
+	if len(env) > 0 {
+		fetchCmd.Env = env
+	}
+	fetchOut, fetchErr := fetchCmd.CombinedOutput()
+	if fetchErr != nil {
+		return string(fetchOut), fmt.Errorf("fetch: %w", fetchErr)
+	}
+
+	resetCmd := exec.CommandContext(ctx, "git", "-C", localPath, "reset", "--hard", "@{u}")
+	resetOut, resetErr := resetCmd.CombinedOutput()
+	combined := string(fetchOut) + string(resetOut)
+	if resetErr != nil {
+		return combined, fmt.Errorf("reset: %w", resetErr)
+	}
+	return combined, nil
+}
+
+// BranchInfo representa um branch local com status de sincronização.
+type BranchInfo struct {
+	Name        string
+	Current     bool
+	Ahead       int
+	Behind      int
+	HasUpstream bool
+}
+
+// ListBranches lista os branches locais com status ahead/behind do upstream.
+func (s *Service) ListBranches(ctx context.Context, localPath string) ([]BranchInfo, error) {
+	cmd := exec.CommandContext(ctx, "git", "-C", localPath, "branch", "-vv",
+		"--format=%(refname:short)|%(HEAD)|%(upstream:short)|%(upstream:track)")
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("git branch: %w", err)
+	}
+	var branches []BranchInfo
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.SplitN(line, "|", 4)
+		if len(parts) < 2 {
+			continue
+		}
+		name := strings.TrimSpace(parts[0])
+		current := strings.TrimSpace(parts[1]) == "*"
+		upstream := ""
+		track := ""
+		if len(parts) >= 3 {
+			upstream = strings.TrimSpace(parts[2])
+		}
+		if len(parts) >= 4 {
+			track = strings.TrimSpace(parts[3])
+		}
+		bi := BranchInfo{Name: name, Current: current, HasUpstream: upstream != ""}
+		if track != "" {
+			if a := parseTrackNum(track, "ahead"); a > 0 {
+				bi.Ahead = a
+			}
+			if b := parseTrackNum(track, "behind"); b > 0 {
+				bi.Behind = b
+			}
+		}
+		branches = append(branches, bi)
+	}
+	return branches, nil
+}
+
+// parseTrackNum extrai o número de commits ahead ou behind do formato [ahead N, behind M].
+func parseTrackNum(track, dir string) int {
+	// track looks like "[ahead 2]", "[behind 1]", "[ahead 2, behind 3]"
+	track = strings.Trim(track, "[]")
+	for _, part := range strings.Split(track, ",") {
+		part = strings.TrimSpace(part)
+		if strings.HasPrefix(part, dir+" ") {
+			rest := strings.TrimPrefix(part, dir+" ")
+			n := 0
+			for _, ch := range rest {
+				if ch >= '0' && ch <= '9' {
+					n = n*10 + int(ch-'0')
+				}
+			}
+			return n
+		}
+	}
+	return 0
+}
+
+// CheckoutBranch faz checkout de um branch existente.
+func (s *Service) CheckoutBranch(ctx context.Context, localPath, branch string) error {
+	cmd := exec.CommandContext(ctx, "git", "-C", localPath, "checkout", branch)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("%s: %w", strings.TrimSpace(string(out)), err)
+	}
+	return nil
+}
+
 // NewBranch cria e faz checkout de um novo branch.
 func (s *Service) NewBranch(ctx context.Context, localPath, branch string) error {
 	cmd := exec.CommandContext(ctx, "git", "-C", localPath, "checkout", "-b", branch)
@@ -252,11 +360,23 @@ func (s *Service) SetRepoGitConfig(localPath, key, value string) error {
 	return nil
 }
 
+// DefaultScanExcludes são os diretórios ignorados por padrão no scan.
+var DefaultScanExcludes = []string{
+	"node_modules", ".cache", ".npm", "vendor", "dist", "build",
+	".next", ".nuxt", "out", "target", "__pycache__", ".tox",
+	".venv", "venv", ".gradle", ".idea", ".vscode",
+}
+
 // ScanForRepos escaneia root procurando diretórios git até maxDepth de profundidade.
-func (s *Service) ScanForRepos(root string, maxDepth int) ([]string, error) {
+// excludeDirs são nomes de diretórios a ignorar.
+func (s *Service) ScanForRepos(root string, maxDepth int, excludeDirs []string) ([]string, error) {
 	root, err := expandHome(root)
 	if err != nil {
 		return nil, err
+	}
+	excluded := make(map[string]bool, len(excludeDirs))
+	for _, d := range excludeDirs {
+		excluded[d] = true
 	}
 	var found []string
 	err = filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
@@ -265,6 +385,9 @@ func (s *Service) ScanForRepos(root string, maxDepth int) ([]string, error) {
 		}
 		if !d.IsDir() {
 			return nil
+		}
+		if excluded[d.Name()] {
+			return filepath.SkipDir
 		}
 		rel, _ := filepath.Rel(root, path)
 		depth := len(strings.Split(rel, string(os.PathSeparator)))

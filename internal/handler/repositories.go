@@ -308,10 +308,20 @@ func (h *Handler) DeleteRepository(w http.ResponseWriter, r *http.Request) {
 
 // ── Scan Repos ────────────────────────────────────────────────────
 
+type excludeOption struct {
+	Name    string
+	Default bool
+}
+
 func (h *Handler) ScanReposDrawer(w http.ResponseWriter, r *http.Request) {
 	markHX(w, r)
+	opts := make([]excludeOption, 0, len(igit.DefaultScanExcludes))
+	for _, d := range igit.DefaultScanExcludes {
+		opts = append(opts, excludeOption{Name: d, Default: true})
+	}
 	h.renderDrawer(w, "Escanear Repositórios", "repos/scan-drawer.html", map[string]any{
-		"DefaultPath": h.app.Paths.Home,
+		"DefaultPath":    h.app.Paths.Home,
+		"ExcludeOptions": opts,
 	})
 }
 
@@ -338,8 +348,13 @@ func (h *Handler) ValidateScanPath(w http.ResponseWriter, r *http.Request) {
 		managedPaths[repo.LocalPath] = true
 	}
 
+	excludeDirs := r.Form["excludeDirs"]
+	if len(excludeDirs) == 0 {
+		excludeDirs = igit.DefaultScanExcludes
+	}
+
 	svc := igit.NewService()
-	found, err := svc.ScanForRepos(root, 3)
+	found, err := svc.ScanForRepos(root, 4, excludeDirs)
 	if err != nil {
 		h.operationError(w, "Erro ao escanear: "+err.Error(), http.StatusBadRequest)
 		return
@@ -624,9 +639,193 @@ func (h *Handler) GetRepoTab(w http.ResponseWriter, r *http.Request) {
 			"Offset":  offset + 20,
 			"HasMore": len(commits) == 20,
 		})
+	case "branches":
+		branches, err := svc.ListBranches(ctx, repo.LocalPath)
+		h.render(w, "repos/tab-branches.html", map[string]any{
+			"Repo":     repo,
+			"Branches": branches,
+			"Err":      err,
+		})
 	default:
 		h.operationError(w, "Tab desconhecida", http.StatusBadRequest)
 	}
+}
+
+// CheckoutBranch faz checkout de um branch existente no repositório.
+func (h *Handler) CheckoutBranch(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	id := chi.URLParam(r, "id")
+	branch := strings.TrimSpace(r.FormValue("branch"))
+	if branch == "" {
+		h.errorToast(w, "Nome do branch é obrigatório")
+		return
+	}
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+	var repo *storage.Repository
+	for i := range state.Repositories {
+		if state.Repositories[i].ID == id {
+			repo = &state.Repositories[i]
+			break
+		}
+	}
+	if repo == nil {
+		h.errorToast(w, "Repositório não encontrado")
+		return
+	}
+	svc := igit.NewService()
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	if err := svc.CheckoutBranch(ctx, repo.LocalPath, branch); err != nil {
+		h.errorToast(w, "Erro ao trocar branch: "+err.Error())
+		return
+	}
+	h.repoSuccessToast(w, "Branch alterado para "+branch)
+	branches, _ := svc.ListBranches(ctx, repo.LocalPath)
+	h.render(w, "repos/tab-branches.html", map[string]any{
+		"Repo":     repo,
+		"Branches": branches,
+	})
+}
+
+// ── Pull All Job ──────────────────────────────────────────────────
+
+func (h *Handler) StartPullAllJob(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	if err := r.ParseForm(); err != nil {
+		h.operationError(w, "Formulário inválido", http.StatusBadRequest)
+		return
+	}
+	force := r.FormValue("force") == "1" || r.FormValue("force") == "true"
+
+	state, err := h.app.Storage.LoadState()
+	if err != nil {
+		h.operationError(w, app.FriendlyMessage(err), http.StatusInternalServerError)
+		return
+	}
+	if len(state.Repositories) == 0 {
+		h.successToastOnly(w, "Nenhum repositório para atualizar.")
+		return
+	}
+
+	// Mapa accountID -> arquivo de identidade
+	keyMap := make(map[string]string)
+	for _, acc := range state.Accounts {
+		for _, k := range state.Keys {
+			if k.ID == acc.KeyID {
+				keyMap[acc.ID] = k.PrivateKeyPath
+				break
+			}
+		}
+		if _, ok := keyMap[acc.ID]; !ok && acc.IdentityFile != "" {
+			keyMap[acc.ID] = acc.IdentityFile
+		}
+	}
+
+	job := &PullAllJob{
+		ID:      newID(),
+		Force:   force,
+		Total:   len(state.Repositories),
+		Results: make([]PullAllResult, len(state.Repositories)),
+	}
+	for i, repo := range state.Repositories {
+		job.Results[i] = PullAllResult{RepoName: repo.Name}
+	}
+
+	h.pullAllMu.Lock()
+	h.pullAllJobs[job.ID] = job
+	h.pullAllMu.Unlock()
+
+	for i, repo := range state.Repositories {
+		go func(idx int, r storage.Repository) {
+			identityFile := keyMap[r.AccountID]
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+			defer cancel()
+
+			svc := igit.NewService()
+			var output string
+			var pullErr error
+			if force {
+				output, pullErr = svc.PullForce(ctx, r.LocalPath, identityFile)
+			} else {
+				output, pullErr = svc.Pull(ctx, r.LocalPath, identityFile)
+			}
+
+			h.pullAllMu.Lock()
+			job.Results[idx].Done = true
+			job.Results[idx].Output = output
+			if pullErr != nil {
+				job.Results[idx].OK = false
+				job.Results[idx].Error = app.FriendlyMessage(pullErr)
+			} else {
+				job.Results[idx].OK = true
+			}
+			allDone := true
+			for _, res := range job.Results {
+				if !res.Done {
+					allDone = false
+					break
+				}
+			}
+			if allDone {
+				job.Done = true
+			}
+			h.pullAllMu.Unlock()
+		}(i, repo)
+	}
+
+	h.render(w, "repos/pull-all-progress.html", map[string]any{
+		"ID":      job.ID,
+		"Done":    false,
+		"Force":   force,
+		"Results": job.Results,
+	})
+}
+
+func (h *Handler) PullAllJobStatus(w http.ResponseWriter, r *http.Request) {
+	markHX(w, r)
+	id := chi.URLParam(r, "id")
+
+	h.pullAllMu.Lock()
+	job, ok := h.pullAllJobs[id]
+	var done, force bool
+	var results []PullAllResult
+	if ok {
+		done = job.Done
+		force = job.Force
+		results = make([]PullAllResult, len(job.Results))
+		copy(results, job.Results)
+	}
+	h.pullAllMu.Unlock()
+
+	if !ok {
+		h.operationError(w, "Job não encontrado", http.StatusNotFound)
+		return
+	}
+
+	if done {
+		allOK := true
+		for _, res := range results {
+			if !res.OK {
+				allOK = false
+				break
+			}
+		}
+		if allOK {
+			w.Header().Set("HX-Trigger", `{"showToast":{"msg":"Pull concluído em todos os repositórios!","type":"success"}}`)
+		}
+		w.WriteHeader(286)
+	}
+
+	h.render(w, "repos/pull-all-progress.html", map[string]any{
+		"ID":      id,
+		"Done":    done,
+		"Force":   force,
+		"Results": results,
+	})
 }
 
 func (h *Handler) SetRepoGitConfigHandler(w http.ResponseWriter, r *http.Request) {

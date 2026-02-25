@@ -92,10 +92,32 @@
             <div><strong>Criada em:</strong> {{.CreatedAt.Format "02/01/2006 15:04"}}</div>
           </div>
 
+          {{if .HasPrivKey}}
+          <div class="fdev-code-block" style="border-color:#e1a0a0">
+            <div class="fdev-code-head">
+              <strong style="color:#7a1e1e">🔐 Chave Privada</strong>
+              <div style="display:flex;gap:6px">
+                <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="button"
+                  onclick="copyElContent(this, 'kpriv-{{.ID}}')">Copiar</button>
+                <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="button"
+                  onclick="toggleSecret('kpriv-{{.ID}}', this)">Mostrar</button>
+                <a class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+                  href="#" onclick="event.preventDefault()"
+                  hx-get="/tools/keys/{{.ID}}/export?which=priv"
+                  hx-target="#drawer-content">Base64</a>
+              </div>
+            </div>
+            <pre id="kpriv-{{.ID}}" class="secret hidden">{{.PrivateKeyContent}}</pre>
+            <p style="font-size:11px;color:#9c9890;margin:6px 0 0">
+              ⚠ Nunca compartilhe a chave privada. Ela fica armazenada localmente em <code>{{.PrivateKeyPath}}</code>
+            </p>
+          </div>
+          {{end}}
+
           {{if .HasPubKey}}
           <div class="fdev-code-block">
             <div class="fdev-code-head">
-              <strong>Chave Pública</strong>
+              <strong>🔑 Chave Pública</strong>
               <div style="display:flex;gap:6px">
                 <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="button"
                   onclick="copyElContent(this, 'kpub-{{.ID}}')">Copiar</button>
