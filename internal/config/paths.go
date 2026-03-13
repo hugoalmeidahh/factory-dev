@@ -43,6 +43,7 @@ func NewPaths() (*Paths, error) {
 func (p *Paths) KeyDir(alias string) string {
 	if !validAlias.MatchString(alias) {
 		slog.Warn("alias fora do padrão em KeyDir", "alias", alias)
+		return ""
 	}
 	return filepath.Join(p.Keys, alias)
 }
@@ -66,7 +67,11 @@ func (p *Paths) PrivateKey(alias string) string {
 
 // PrivateKeyForType retorna o path da chave privada pelo tipo.
 func (p *Paths) PrivateKeyForType(alias, keyType string) string {
-	return filepath.Join(p.KeyDir(alias), keyFileName(keyType))
+	dir := p.KeyDir(alias)
+	if dir == "" {
+		return ""
+	}
+	return filepath.Join(dir, keyFileName(keyType))
 }
 
 // PublicKey retorna o path Ed25519 (compatibilidade retroativa).
@@ -76,7 +81,11 @@ func (p *Paths) PublicKey(alias string) string {
 
 // PublicKeyForType retorna o path da chave pública pelo tipo.
 func (p *Paths) PublicKeyForType(alias, keyType string) string {
-	return filepath.Join(p.KeyDir(alias), keyFileName(keyType)+".pub")
+	dir := p.KeyDir(alias)
+	if dir == "" {
+		return ""
+	}
+	return filepath.Join(dir, keyFileName(keyType)+".pub")
 }
 
 func (p *Paths) SSHDir() string {

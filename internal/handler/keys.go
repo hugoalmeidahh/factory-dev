@@ -17,10 +17,11 @@ import (
 
 type keyView struct {
 	storage.Key
-	HasPrivKey       bool
-	HasPubKey        bool
-	PublicKeyContent string
-	UsedByAccounts   []string
+	HasPrivKey        bool
+	HasPubKey         bool
+	PublicKeyContent  string
+	PrivateKeyContent string
+	UsedByAccounts    []string
 }
 
 type keyFormData struct {
@@ -48,17 +49,22 @@ func (h *Handler) ListKeys(w http.ResponseWriter, r *http.Request) {
 	for _, k := range state.Keys {
 		_, privErr := os.Stat(k.PrivateKeyPath)
 		_, pubErr := os.Stat(k.PublicKeyPath)
-		var pubContent string
+		var pubContent, privContent string
 		if pubErr == nil {
 			b, _ := os.ReadFile(k.PublicKeyPath)
 			pubContent = strings.TrimSpace(string(b))
 		}
+		if privErr == nil {
+			b, _ := os.ReadFile(k.PrivateKeyPath)
+			privContent = strings.TrimSpace(string(b))
+		}
 		views = append(views, keyView{
-			Key:              k,
-			HasPrivKey:       privErr == nil,
-			HasPubKey:        pubErr == nil,
-			PublicKeyContent: pubContent,
-			UsedByAccounts:   keyUsage[k.ID],
+			Key:               k,
+			HasPrivKey:        privErr == nil,
+			HasPubKey:         pubErr == nil,
+			PublicKeyContent:  pubContent,
+			PrivateKeyContent: privContent,
+			UsedByAccounts:    keyUsage[k.ID],
 		})
 	}
 

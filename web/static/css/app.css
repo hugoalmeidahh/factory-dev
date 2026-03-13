@@ -193,12 +193,33 @@ body { margin: 0; font-family: "IBM Plex Sans", sans-serif; color: var(--ink); b
 /* ── Server tags ────────────────────────────────────────────── */
 .fdev-tag { padding: 2px 8px; border-radius: 999px; font-size: 11px; background: #f0f0ea; border: 1px solid var(--border); color: #5d5950; }
 
+/* ── Branch badges (tab Branches) ───────────────────────────── */
+.fdev-branch-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid; font-weight: 600; white-space: nowrap; }
+.fdev-branch-badge--ahead  { background: #e7f7f0; color: #0d6c4f; border-color: #93d8bd; }
+.fdev-branch-badge--behind { background: #fff3e5; color: #8a5a10; border-color: #e1bf8f; }
+.fdev-branch-badge--synced { background: #f0f0ea; color: #5d5950;  border-color: #d7d2c4; }
+
+/* ── Botões: estado de loading via htmx-request ─────────────── */
+.fdev-btn.htmx-request {
+  position: relative; pointer-events: none; opacity: 0.8; color: transparent !important;
+}
+.fdev-btn.htmx-request::after {
+  content: ''; position: absolute; width: 13px; height: 13px;
+  top: calc(50% - 6.5px); left: calc(50% - 6.5px);
+  border-radius: 50%; border: 2px solid rgba(0,0,0,0.15);
+  border-top-color: var(--accent);
+  animation: fdev-spin 0.6s linear infinite;
+}
+
+/* ── Sidebar fixa (desktop) ─────────────────────────────────── */
+.fdev-sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; align-self: start; }
+
 /* ── [x-cloak] — esconde elementos Alpine antes de montar ───── */
 [x-cloak] { display: none !important; }
 
 @media (max-width: 900px) {
   .fdev-body { grid-template-columns: 1fr; }
-  .fdev-sidebar { position: sticky; top: 0; z-index: 4; }
+  .fdev-sidebar { position: sticky; top: 0; height: auto; z-index: 4; }
   .fdev-list-card-actions { flex-wrap: wrap; }
   .fdev-repo-status-wrap { flex-wrap: wrap; }
 }

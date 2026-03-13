@@ -5,7 +5,7 @@
       <h1>Repositories</h1>
       <p>Repositórios clonados via FactoryDev.</p>
     </div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;align-items:center">
       <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
         hx-get="/tools/repos"
         hx-target="#main-content"
@@ -15,6 +15,19 @@
         hx-target="#drawer-content">
         Scan Repos
       </button>
+      <!-- Pull Todos -->
+      <form style="display:flex;align-items:center;gap:5px;margin:0"
+        hx-post="/tools/repos/pull-all"
+        hx-target="#pull-all-slot"
+        hx-swap="innerHTML">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#5d5950;cursor:pointer;white-space:nowrap">
+          <input type="checkbox" name="force" value="1"
+            style="width:13px;height:13px;accent-color:var(--accent)">
+          Force
+        </label>
+        <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="submit"
+          title="Atualiza todos os repositórios gerenciados">⇩ Pull Todos</button>
+      </form>
       <button class="fdev-btn"
         hx-get="/tools/repos/clone/new"
         hx-target="#drawer-content">
@@ -22,6 +35,8 @@
       </button>
     </div>
   </header>
+
+  <div id="pull-all-slot"></div>
 
   {{if eq (len .Repos) 0}}
   <div class="fdev-empty">
@@ -102,6 +117,14 @@
             hx-swap="innerHTML"
             hx-trigger="click">
             Commits
+          </button>
+          <button class="fdev-tab-btn" :class="{active:tab==='branches'}"
+            @click="tab='branches'"
+            hx-get="/tools/repos/{{.ID}}/tab/branches"
+            hx-target="#repo-tab-{{.ID}}"
+            hx-swap="innerHTML"
+            hx-trigger="click">
+            Branches
           </button>
         </div>
         <!-- Tab content: carregado via HTMX, default overview -->

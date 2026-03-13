@@ -1,0 +1,65 @@
+{{define "repos/tab-branches.html"}}
+{{if .Err}}
+<div class="fdev-empty" style="padding:16px">
+  <p style="color:#7a1e1e;font-size:13px">Erro ao listar branches: {{.Err}}</p>
+</div>
+{{else if not .Branches}}
+<div class="fdev-empty" style="padding:16px">
+  <p style="color:#5d5950;font-size:13px">Nenhum branch encontrado.</p>
+</div>
+{{else}}
+<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+  {{range .Branches}}
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
+              border-radius:8px;border:1px solid var(--border);
+              background:{{if .Current}}#f0fdf6{{else}}#fdfcf9{{end}}">
+
+    <!-- Nome do branch -->
+    <span style="font-family:monospace;font-size:13px;
+                 font-weight:{{if .Current}}700{{else}}400{{end}};
+                 color:{{if .Current}}#0d6c4f{{else}}var(--text){{end}};
+                 flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          title="{{.Name}}">
+      {{if .Current}}● {{end}}{{.Name}}
+    </span>
+
+    <!-- Badges ahead/behind -->
+    <div style="display:flex;gap:4px;flex-shrink:0">
+      {{if not .HasUpstream}}
+        <span class="fdev-branch-badge fdev-branch-badge--synced" title="Sem upstream configurado">local</span>
+      {{else if and (eq .Ahead 0) (eq .Behind 0)}}
+        <span class="fdev-branch-badge fdev-branch-badge--synced" title="Sincronizado com upstream">✓ sync</span>
+      {{else}}
+        {{if gt .Ahead 0}}
+        <span class="fdev-branch-badge fdev-branch-badge--ahead" title="{{.Ahead}} commit(s) à frente do upstream">↑ {{.Ahead}}</span>
+        {{end}}
+        {{if gt .Behind 0}}
+        <span class="fdev-branch-badge fdev-branch-badge--behind" title="{{.Behind}} commit(s) atrás do upstream">↓ {{.Behind}}</span>
+        {{end}}
+      {{end}}
+    </div>
+
+    <!-- Botão de checkout -->
+    {{if not .Current}}
+    <form style="margin:0"
+          hx-post="/tools/repos/{{$.Repo.ID}}/checkout"
+          hx-target="#repo-tab-{{$.Repo.ID}}"
+          hx-swap="innerHTML">
+      <input type="hidden" name="branch" value="{{.Name}}">
+      <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" type="submit">Usar</button>
+    </form>
+    {{else}}
+    <span style="font-size:11px;color:#0d6c4f;font-weight:600">atual</span>
+    {{end}}
+  </div>
+  {{end}}
+</div>
+
+<button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+  hx-get="/tools/repos/{{.Repo.ID}}/tab/branches"
+  hx-target="#repo-tab-{{.Repo.ID}}"
+  hx-swap="innerHTML">
+  ↻ Atualizar
+</button>
+{{end}}
+{{end}}
