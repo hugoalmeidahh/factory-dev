@@ -1,0 +1,55 @@
+{{define "aliases/list.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Aliases</h1>
+      <p>Gerencie atalhos de terminal. Arquivo: <code>{{.AliasFile}}</code></p>
+    </div>
+    <button class="fdev-btn"
+      hx-get="/tools/aliases/new"
+      hx-target="#drawer-content">
+      Novo Alias
+    </button>
+  </header>
+
+  {{if eq (len .Aliases) 0}}
+  <div class="fdev-empty">
+    <h2>Nenhum alias cadastrado</h2>
+    <p>Crie atalhos de terminal para comandos frequentes.</p>
+    <button class="fdev-btn"
+      hx-get="/tools/aliases/new"
+      hx-target="#drawer-content">
+      Novo Alias
+    </button>
+  </div>
+  {{else}}
+  <div class="fdev-list">
+    {{range .Aliases}}
+    <article class="fdev-list-card">
+      <div class="fdev-list-card-header">
+        <div class="fdev-list-card-info">
+          <h3 class="fdev-list-card-name" style="font-family:monospace">{{.Name}}</h3>
+          <p class="fdev-list-card-sub" style="font-family:monospace;font-size:12px">{{.Command}}</p>
+        </div>
+        <div class="fdev-list-card-actions">
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-get="/tools/aliases/{{.ID}}/edit"
+            hx-target="#drawer-content">
+            Editar
+          </button>
+          <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+            hx-delete="/tools/aliases/{{.ID}}"
+            hx-target="#main-content"
+            hx-confirm="Remover alias {{.Name}}?">
+            Remover
+          </button>
+        </div>
+      </div>
+    </article>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "aliases/list.html" .}}{{end}}

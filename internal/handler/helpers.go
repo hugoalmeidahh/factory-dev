@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/seuusuario/factorydev/internal/storage"
@@ -97,7 +98,7 @@ func (h *Handler) renderDrawer(w http.ResponseWriter, title, tmpl string, data a
 }
 
 func (h *Handler) successToast(w http.ResponseWriter, msg string) {
-	trigger := fmt.Sprintf(`{"showToast":{"msg":%q,"type":"success"},"closeDrawer":true}`, msg)
+	trigger := fmt.Sprintf(`{"showToast":{"msg":%q,"type":"success"},"closeDrawer":true,"refreshList":true}`, msg)
 	w.Header().Set("HX-Trigger", trigger)
 }
 
@@ -107,7 +108,7 @@ func (h *Handler) successToastOnly(w http.ResponseWriter, msg string) {
 }
 
 func (h *Handler) repoSuccessToast(w http.ResponseWriter, msg string) {
-	trigger := fmt.Sprintf(`{"showToast":{"msg":%q,"type":"success"},"closeDrawer":true}`, msg)
+	trigger := fmt.Sprintf(`{"showToast":{"msg":%q,"type":"success"},"closeDrawer":true,"refreshList":true}`, msg)
 	w.Header().Set("HX-Trigger", trigger)
 }
 
@@ -123,6 +124,30 @@ func (h *Handler) operationError(w http.ResponseWriter, msg string, status int) 
 	}
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(map[string]string{"error": msg})
+}
+
+// expandHome expande "~/" para o diretório home do usuário.
+func expandHome(path, homedir string) string {
+	if strings.HasPrefix(path, "~/") {
+		return filepath.Join(homedir, path[2:])
+	}
+	return path
+}
+
+// resolvePrivateKeyPath retorna o caminho da chave privada de uma conta,
+// respeitando a precedência: KeyID (Key Manager) > IdentityFile (legado).
+func resolvePrivateKeyPath(a storage.Account, keys []storage.Key, homedir string) string {
+	if a.KeyID != "" {
+		for _, k := range keys {
+			if k.ID == a.KeyID {
+				return k.PrivateKeyPath
+			}
+		}
+	}
+	if a.IdentityFile != "" {
+		return expandHome(a.IdentityFile, homedir)
+	}
+	return ""
 }
 
 func mapValidation(errs []storage.ValidationError) map[string]string {

@@ -96,6 +96,87 @@ func (h *Handler) Routes() http.Handler {
 	r.Post("/tools/servers/{id}/send-file", h.StartSendFileJob)
 	r.Get("/tools/servers/send-jobs/{jobId}", h.SendFileJobStatus)
 
+	// Env Variables
+	r.Get("/tools/envs", h.ListEnvs)
+	r.Get("/tools/envs/new", h.NewEnvDrawer)
+	r.Post("/tools/envs", h.CreateEnv)
+	r.Get("/tools/envs/{id}/edit", h.EditEnvDrawer)
+	r.Post("/tools/envs/{id}", h.UpdateEnv)
+	r.Delete("/tools/envs/{id}", h.DeleteEnv)
+	r.Post("/tools/envs/{id}/export", h.ExportEnvFile)
+
+	// Aliases
+	r.Get("/tools/aliases", h.ListAliases)
+	r.Get("/tools/aliases/new", h.NewAliasDrawer)
+	r.Post("/tools/aliases", h.CreateAlias)
+	r.Get("/tools/aliases/{id}/edit", h.EditAliasDrawer)
+	r.Post("/tools/aliases/{id}", h.UpdateAlias)
+	r.Delete("/tools/aliases/{id}", h.DeleteAlias)
+
+	// Installer
+	r.Get("/tools/installer", h.InstallerDashboard)
+	r.Post("/tools/installer/{name}/install", h.InstallTool)
+	r.Post("/tools/installer/{name}/uninstall", h.UninstallTool)
+	r.Get("/tools/installer/jobs/{id}", h.InstallerJobStatus)
+
+	// Task Manager
+	r.Get("/tools/tasks", h.TasksDashboard)
+	r.Get("/tools/tasks/list", h.TasksListPartial)
+	r.Post("/tools/tasks/{pid}/kill", h.KillProcess)
+
+	// Network Monitor
+	r.Get("/tools/network", h.NetworkDashboard)
+	r.Get("/tools/network/list", h.NetworkListPartial)
+	r.Post("/tools/network/block", h.BlockConnection)
+
+	// Firewall
+	r.Get("/tools/firewall", h.FirewallDashboard)
+	r.Post("/tools/firewall/toggle", h.ToggleFirewall)
+	r.Post("/tools/firewall/rules", h.AddFirewallRule)
+
+	// API Client
+	r.Get("/tools/api", h.APIDashboard)
+	r.Get("/tools/api/collections/new", h.NewCollectionDrawer)
+	r.Post("/tools/api/collections", h.CreateCollection)
+	r.Get("/tools/api/collections/{id}/edit", h.EditCollectionDrawer)
+	r.Post("/tools/api/collections/{id}", h.UpdateCollection)
+	r.Delete("/tools/api/collections/{id}", h.DeleteCollection)
+	r.Get("/tools/api/endpoints/new", h.NewEndpointDrawer)
+	r.Post("/tools/api/endpoints", h.CreateEndpoint)
+	r.Get("/tools/api/endpoints/{id}/edit", h.EditEndpointDrawer)
+	r.Post("/tools/api/endpoints/{id}", h.UpdateEndpoint)
+	r.Delete("/tools/api/endpoints/{id}", h.DeleteEndpoint)
+	r.Post("/tools/api/endpoints/{id}/send", h.SendRequest)
+	r.Post("/tools/api/send", h.SendAdHocRequest)
+	r.Get("/tools/api/history", h.APIRequestHistory)
+
+	// Database Browser
+	r.Get("/tools/db", h.DBDashboard)
+	r.Get("/tools/db/connections/new", h.NewDBConnectionDrawer)
+	r.Post("/tools/db/connections", h.CreateDBConnection)
+	r.Get("/tools/db/connections/{id}/edit", h.EditDBConnectionDrawer)
+	r.Post("/tools/db/connections/{id}", h.UpdateDBConnection)
+	r.Delete("/tools/db/connections/{id}", h.DeleteDBConnection)
+	r.Post("/tools/db/connections/{id}/test", h.TestDBConnection)
+	r.Get("/tools/db/connections/{id}/tables", h.DBListTables)
+	r.Get("/tools/db/connections/{id}/tables/{table}", h.DBDescribeTable)
+	r.Post("/tools/db/connections/{id}/query", h.DBRunQuery)
+
+	// MCP & Skills
+	r.Get("/tools/mcp", h.MCPDashboard)
+	r.Get("/tools/mcp/servers/new", h.NewMCPServerDrawer)
+	r.Post("/tools/mcp/servers", h.CreateMCPServer)
+	r.Get("/tools/mcp/servers/{id}/edit", h.EditMCPServerDrawer)
+	r.Post("/tools/mcp/servers/{id}", h.UpdateMCPServer)
+	r.Delete("/tools/mcp/servers/{id}", h.DeleteMCPServer)
+	r.Post("/tools/mcp/servers/sync", h.SyncToClaudeCode)
+	r.Get("/tools/mcp/skills/new", h.NewSkillDrawer)
+	r.Post("/tools/mcp/skills", h.CreateSkill)
+	r.Get("/tools/mcp/skills/{id}/edit", h.EditSkillDrawer)
+	r.Post("/tools/mcp/skills/{id}", h.UpdateSkill)
+	r.Delete("/tools/mcp/skills/{id}", h.DeleteSkill)
+	r.Post("/tools/mcp/skills/{id}/copy", h.CopySkillPrompt)
+
 	// System
 	r.Get("/tools/system", h.SystemDashboard)
 	r.Get("/tools/system/widgets", h.SystemWidgets)

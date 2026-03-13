@@ -52,6 +52,9 @@ type Handler struct {
 	// Docker jobs (pull image)
 	dockerJobs map[string]*DockerJob
 	dockerMu   sync.Mutex
+	// Installer jobs
+	installerJobs map[string]*GitOpJob
+	installerMu   sync.Mutex
 }
 
 func New(a *app.App) *Handler {
@@ -62,6 +65,7 @@ func New(a *app.App) *Handler {
 		serverTestJobs: make(map[string]*GitOpJob),
 		sendFileJobs:   make(map[string]*GitOpJob),
 		dockerJobs:     make(map[string]*DockerJob),
+		installerJobs:  make(map[string]*GitOpJob),
 	}
 }
 

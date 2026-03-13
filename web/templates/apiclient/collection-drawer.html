@@ -1,0 +1,91 @@
+{{define "apiclient/collection-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>{{if .IsEdit}}Editar Collection{{else}}Nova Collection{{end}}</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body"
+  x-data='{
+    authType: "{{.Collection.AuthType}}",
+    envs: {{.EnvJSON}},
+    addEnv() { this.envs.push({key: "", value: ""}) },
+    removeEnv(i) { this.envs.splice(i, 1) },
+    serializeEnvs() { return JSON.stringify(this.envs.filter(v => v.key.trim() !== "")) }
+  }'>
+  <form class="fdev-form"
+    hx-post="{{.SubmitURL}}"
+    hx-target="#main-content"
+    hx-push-url="/tools/api"
+    @submit="$refs.envInput.value = serializeEnvs()">
+
+    <label style="font-size:14px;font-weight:600">Nome *</label>
+    <input type="text" name="name"
+      value="{{if .Collection}}{{.Collection.Name}}{{end}}"
+      placeholder="ex: Backend API, Auth Service" required>
+
+    <label style="font-size:14px;font-weight:600">Auth Type</label>
+    <select name="authType" x-model="authType" style="border:1px solid var(--border);border-radius:8px;padding:8px">
+      <option value="none">Nenhuma</option>
+      <option value="bearer">Bearer Token</option>
+      <option value="basic">Basic Auth</option>
+      <option value="apikey">API Key</option>
+    </select>
+
+    <div x-show="authType === 'bearer'" style="margin-top:8px">
+      <label style="font-size:13px;font-weight:600">Token</label>
+      <input type="text" name="authToken"
+        value="{{if .Collection.AuthData}}{{index .Collection.AuthData "token"}}{{end}}"
+        placeholder="Bearer token" style="font-family:monospace;font-size:12px">
+    </div>
+
+    <div x-show="authType === 'basic'" style="margin-top:8px;display:flex;gap:8px">
+      <div style="flex:1">
+        <label style="font-size:13px;font-weight:600">Username</label>
+        <input type="text" name="authUsername"
+          value="{{if .Collection.AuthData}}{{index .Collection.AuthData "username"}}{{end}}">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:13px;font-weight:600">Password</label>
+        <input type="password" name="authPassword"
+          value="{{if .Collection.AuthData}}{{index .Collection.AuthData "password"}}{{end}}">
+      </div>
+    </div>
+
+    <div x-show="authType === 'apikey'" style="margin-top:8px;display:flex;gap:8px">
+      <div style="flex:1">
+        <label style="font-size:13px;font-weight:600">Header Name</label>
+        <input type="text" name="authHeaderName"
+          value="{{if .Collection.AuthData}}{{index .Collection.AuthData "headerName"}}{{end}}"
+          placeholder="X-API-Key">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:13px;font-weight:600">Header Value</label>
+        <input type="text" name="authHeaderValue"
+          value="{{if .Collection.AuthData}}{{index .Collection.AuthData "headerValue"}}{{end}}"
+          style="font-family:monospace;font-size:12px">
+      </div>
+    </div>
+
+    <input type="hidden" name="envVars" x-ref="envInput">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+      <label style="font-size:14px;font-weight:600;margin:0">Variáveis de Ambiente</label>
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" @click="addEnv()">+ Adicionar</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+      <template x-for="(v, i) in envs" :key="i">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center">
+          <input type="text" x-model="v.key" placeholder="CHAVE" style="font-family:monospace;font-size:12px">
+          <input type="text" x-model="v.value" placeholder="valor" style="font-family:monospace;font-size:12px">
+          <button type="button" class="fdev-btn fdev-btn--danger fdev-btn--sm" @click="removeEnv(i)" style="padding:4px 8px">✕</button>
+        </div>
+      </template>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+      <button class="fdev-btn" type="submit">{{if .IsEdit}}Salvar{{else}}Criar{{end}}</button>
+    </div>
+  </form>
+</div>
+{{end}}

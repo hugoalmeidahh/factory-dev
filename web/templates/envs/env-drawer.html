@@ -1,0 +1,61 @@
+{{define "envs/env-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>{{if .IsEdit}}Editar .env{{else}}Novo .env{{end}}</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body"
+  x-data='{
+    vars: {{.VarsJSON}},
+    addVar() { this.vars.push({key: "", value: ""}) },
+    removeVar(i) { this.vars.splice(i, 1) },
+    serialize() { return JSON.stringify(this.vars.filter(v => v.key.trim() !== "")) }
+  }'>
+  <form class="fdev-form"
+    hx-post="{{.SubmitURL}}"
+    hx-target="#main-content"
+    hx-push-url="/tools/envs"
+    @submit="$refs.varsInput.value = serialize()">
+
+    <label style="font-size:14px;font-weight:600">Nome *</label>
+    <input type="text" name="name"
+      value="{{if .Env}}{{.Env.Name}}{{end}}"
+      placeholder="ex: backend-prod, api-keys" required>
+
+    <label style="font-size:14px;font-weight:600">Projeto (path opcional)</label>
+    <input type="text" name="projectPath"
+      value="{{if .Env}}{{.Env.ProjectPath}}{{end}}"
+      placeholder="ex: /Users/hugo/projects/meu-app">
+
+    <input type="hidden" name="variables" x-ref="varsInput">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+      <label style="font-size:14px;font-weight:600;margin:0">Variáveis</label>
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" @click="addVar()">+ Adicionar</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+      <template x-for="(v, i) in vars" :key="i">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center">
+          <input type="text" x-model="v.key" placeholder="CHAVE"
+            style="font-family:monospace;font-size:13px">
+          <input type="text" x-model="v.value" placeholder="valor"
+            style="font-family:monospace;font-size:13px">
+          <button type="button" class="fdev-btn fdev-btn--danger fdev-btn--sm"
+            @click="removeVar(i)" style="padding:4px 8px">✕</button>
+        </div>
+      </template>
+    </div>
+
+    <template x-if="vars.length === 0">
+      <p style="color:var(--text-secondary);font-size:13px;text-align:center;padding:16px 0">
+        Nenhuma variável. Clique em "+ Adicionar" para começar.
+      </p>
+    </template>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+      <button class="fdev-btn" type="submit">{{if .IsEdit}}Salvar{{else}}Criar{{end}}</button>
+    </div>
+  </form>
+</div>
+{{end}}

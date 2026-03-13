@@ -1,0 +1,65 @@
+{{define "database/dashboard.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Database Browser</h1>
+      <p>Conecte a bancos SQLite, PostgreSQL ou MySQL.</p>
+    </div>
+    <button class="fdev-btn"
+            hx-get="/tools/db/connections/new"
+            hx-target="#drawer-content">
+      + Nova Conexão
+    </button>
+  </header>
+
+  {{$conns := .Data.Connections}}
+  {{if not $conns}}
+  <div class="fdev-empty">
+    <p>Nenhuma conexão cadastrada.</p>
+  </div>
+  {{else}}
+  <div class="fdev-card-grid">
+    {{range $conns}}
+    <div class="fdev-card" style="position:relative">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">
+          {{if eq .Driver "postgres"}}🐘{{else if eq .Driver "mysql"}}🐬{{else}}📦{{end}}
+        </span>
+        <div>
+          <strong style="font-size:15px">{{.Name}}</strong>
+          <div style="font-size:12px;color:var(--text-secondary)">{{.Driver}}{{if .Host}} — {{.Host}}:{{.Port}}{{end}}</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+        DB: <code>{{.Database}}</code>
+        {{if .User}} | User: <code>{{.User}}</code>{{end}}
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="fdev-btn fdev-btn--sm"
+                hx-get="/tools/db/connections/{{.ID}}/tables"
+                hx-target="#main-content">
+          Abrir
+        </button>
+        <button class="fdev-btn fdev-btn--sm fdev-btn--outline"
+                hx-post="/tools/db/connections/{{.ID}}/test">
+          Testar
+        </button>
+        <button class="fdev-btn fdev-btn--sm fdev-btn--outline"
+                hx-get="/tools/db/connections/{{.ID}}/edit"
+                hx-target="#drawer-content">
+          Editar
+        </button>
+        <button class="fdev-btn fdev-btn--sm fdev-btn--danger"
+                hx-delete="/tools/db/connections/{{.ID}}"
+                hx-confirm="Remover conexão '{{.Name}}'?">
+          Remover
+        </button>
+      </div>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "database/dashboard.html" .}}{{end}}

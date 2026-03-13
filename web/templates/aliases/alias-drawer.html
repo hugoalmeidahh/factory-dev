@@ -1,0 +1,34 @@
+{{define "aliases/alias-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>{{if .IsEdit}}Editar Alias{{else}}Novo Alias{{end}}</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body">
+  <form class="fdev-form"
+    hx-post="{{.SubmitURL}}"
+    hx-target="#main-content"
+    hx-push-url="/tools/aliases">
+
+    <label style="font-size:14px;font-weight:600">Nome do Alias *</label>
+    <input type="text" name="name"
+      value="{{if .Alias}}{{.Alias.Name}}{{end}}"
+      placeholder="ex: gs, dcu, ll" required
+      style="font-family:monospace">
+
+    <label style="font-size:14px;font-weight:600">Comando *</label>
+    <input type="text" name="command"
+      value="{{if .Alias}}{{.Alias.Command}}{{end}}"
+      placeholder="ex: git status, docker compose up -d" required
+      style="font-family:monospace">
+
+    <p style="font-size:12px;color:var(--text-secondary);margin-top:4px">
+      O alias será salvo como: <code>alias nome='comando'</code>
+    </p>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+      <button class="fdev-btn" type="submit">{{if .IsEdit}}Salvar{{else}}Criar{{end}}</button>
+    </div>
+  </form>
+</div>
+{{end}}

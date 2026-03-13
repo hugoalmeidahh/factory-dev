@@ -1,0 +1,20 @@
+{{define "tasks/list.html"}}
+{{range .Processes}}
+<tr style="border-bottom:1px solid var(--border)">
+  <td style="padding:6px 8px;font-family:monospace">{{.PID}}</td>
+  <td style="padding:6px 8px">{{.Name}}</td>
+  <td style="padding:6px 8px;font-family:monospace">{{printf "%.1f" .CPU}}</td>
+  <td style="padding:6px 8px;font-family:monospace">{{printf "%.1f" .Mem}}</td>
+  <td style="padding:6px 8px;font-size:12px">{{.User}}</td>
+  <td style="padding:6px 8px;font-size:12px">{{.Status}}</td>
+  <td style="padding:6px 8px">
+    <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+      hx-post="/tools/tasks/{{.PID}}/kill"
+      hx-confirm="Enviar SIGTERM ao processo {{.Name}} (PID {{.PID}})?"
+      style="padding:2px 8px;font-size:11px">
+      Kill
+    </button>
+  </td>
+</tr>
+{{end}}
+{{end}}

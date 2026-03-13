@@ -1,0 +1,55 @@
+{{define "network/dashboard.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Network Monitor</h1>
+      <p>Conexões TCP ativas do sistema.</p>
+    </div>
+  </header>
+
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);text-align:left">
+          <th style="padding:8px">Processo</th>
+          <th style="padding:8px">PID</th>
+          <th style="padding:8px">Local</th>
+          <th style="padding:8px">Remoto</th>
+          <th style="padding:8px">Status</th>
+          <th style="padding:8px"></th>
+        </tr>
+      </thead>
+      <tbody id="network-body"
+             hx-get="/tools/network/list"
+             hx-trigger="every 5s"
+             hx-swap="innerHTML">
+        {{range .Connections}}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 8px">{{.ProcName}}</td>
+          <td style="padding:6px 8px;font-family:monospace;font-size:12px">{{.PID}}</td>
+          <td style="padding:6px 8px;font-family:monospace;font-size:12px">{{.LocalAddr}}</td>
+          <td style="padding:6px 8px;font-family:monospace;font-size:12px">{{.RemoteAddr}}</td>
+          <td style="padding:6px 8px;font-size:12px">{{.Status}}</td>
+          <td style="padding:6px 8px">
+            <form hx-post="/tools/network/block" style="margin:0">
+              <input type="hidden" name="ip" value="{{.RemoteAddr}}">
+              <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+                type="submit"
+                hx-confirm="Bloquear conexão para {{.RemoteAddr}}? (requer sudo)"
+                style="padding:2px 8px;font-size:11px">
+                Block
+              </button>
+            </form>
+          </td>
+        </tr>
+        {{end}}
+        {{if not .Connections}}
+        <tr><td colspan="6" style="padding:16px;text-align:center;color:var(--text-secondary)">Nenhuma conexão ativa.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{end}}
+
+{{define "content"}}{{template "network/dashboard.html" .}}{{end}}

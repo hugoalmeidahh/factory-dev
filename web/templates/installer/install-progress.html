@@ -1,0 +1,19 @@
+{{define "installer/install-progress.html"}}
+{{if not .Done}}
+<div hx-get="/tools/installer/jobs/{{.ID}}?tool={{.ToolName}}&action={{.Action}}"
+     hx-trigger="every 2s"
+     hx-swap="outerHTML"
+     style="display:flex;align-items:center;gap:8px;padding:4px 0">
+  <span class="fdev-spinner"></span>
+  <span style="font-size:13px;color:var(--text-secondary)">
+    {{if eq .Action "install"}}Instalando{{else}}Desinstalando{{end}} {{.ToolName}}...
+  </span>
+</div>
+{{else}}
+  {{if .OK}}
+  <span style="color:var(--success);font-size:13px">Concluído!</span>
+  {{else}}
+  <span style="color:var(--danger);font-size:13px">Falha: {{.Error}}</span>
+  {{end}}
+{{end}}
+{{end}}

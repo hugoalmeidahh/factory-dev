@@ -1,0 +1,45 @@
+{{define "database/structure.html"}}
+<div style="background:var(--surface);border-radius:12px;padding:16px">
+  <h3 style="font-size:14px;margin-bottom:8px">Estrutura: <code>{{.Table}}</code></h3>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);text-align:left">
+          <th style="padding:6px 8px">Coluna</th>
+          <th style="padding:6px 8px">Tipo</th>
+          <th style="padding:6px 8px">Nullable</th>
+          <th style="padding:6px 8px">Key</th>
+          <th style="padding:6px 8px">Default</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Columns}}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:4px 8px;font-family:monospace;font-weight:600">{{.Name}}</td>
+          <td style="padding:4px 8px;font-family:monospace">{{.Type}}</td>
+          <td style="padding:4px 8px">{{.Nullable}}</td>
+          <td style="padding:4px 8px">{{.Key}}</td>
+          <td style="padding:4px 8px;font-family:monospace;color:var(--text-secondary)">{{.Default}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Quick query -->
+  <div style="margin-top:12px;display:flex;gap:8px">
+    <button class="fdev-btn fdev-btn--sm fdev-btn--outline"
+            hx-post="/tools/db/connections/{{.Conn.ID}}/query"
+            hx-target="#db-query-results"
+            hx-vals='{"query":"SELECT * FROM {{.Table}} LIMIT 100"}'>
+      SELECT * LIMIT 100
+    </button>
+    <button class="fdev-btn fdev-btn--sm fdev-btn--outline"
+            hx-post="/tools/db/connections/{{.Conn.ID}}/query"
+            hx-target="#db-query-results"
+            hx-vals='{"query":"SELECT COUNT(*) AS total FROM {{.Table}}"}'>
+      COUNT(*)
+    </button>
+  </div>
+</div>
+{{end}}

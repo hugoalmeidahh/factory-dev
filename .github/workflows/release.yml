@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Extract Version
+        id: vars
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          # Linux AMD64
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags release -ldflags "-s -w -X main.Version=${{ steps.vars.outputs.VERSION }}" -o dist/factorydev-linux-amd64 ./cmd/factorydev/...
+          
+          # Linux ARM64
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -tags release -ldflags "-s -w -X main.Version=${{ steps.vars.outputs.VERSION }}" -o dist/factorydev-linux-arm64 ./cmd/factorydev/...
+          
+          # macOS AMD64
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags release -ldflags "-s -w -X main.Version=${{ steps.vars.outputs.VERSION }}" -o dist/factorydev-darwin-amd64 ./cmd/factorydev/...
+          
+          # macOS ARM64
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -tags release -ldflags "-s -w -X main.Version=${{ steps.vars.outputs.VERSION }}" -o dist/factorydev-darwin-arm64 ./cmd/factorydev/...
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          generate_release_notes: true

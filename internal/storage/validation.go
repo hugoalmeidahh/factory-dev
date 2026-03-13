@@ -11,7 +11,10 @@ type ValidationError struct {
 }
 
 var (
-	validAliasRe   = regexp.MustCompile(`^[a-z0-9_-]+$`)
+	// Permite ponto além de hífen e underscore — necessário para aliases como "github.com-hugo".
+	// Deve começar com letra ou número para evitar path traversal (ex: ..).
+	validAliasRe      = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
+	validAliasNameRe  = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_-]*$`)
 	validEmailRe   = regexp.MustCompile(`^[^@\s]+@[^@\s]+\.[^@\s]+$`)
 	validHostRe    = regexp.MustCompile(`^[^\s:/]+(\:[0-9]+)?$`)
 	validProviders = map[string]bool{
@@ -45,7 +48,7 @@ func Validate(a Account, existing []Account) []ValidationError {
 	}
 
 	if !validAliasRe.MatchString(a.HostAlias) {
-		errs = append(errs, ValidationError{Field: "hostAlias", Message: "apenas letras minúsculas, números, - e _"})
+		errs = append(errs, ValidationError{Field: "hostAlias", Message: "apenas letras minúsculas, números, ponto, - e _"})
 	}
 	for _, e := range existing {
 		if e.HostAlias == a.HostAlias && e.ID != a.ID {
@@ -72,11 +75,34 @@ func ValidateKey(k Key) []ValidationError {
 		errs = append(errs, ValidationError{Field: "name", Message: "obrigatório"})
 	}
 	if !validAliasRe.MatchString(k.Alias) {
-		errs = append(errs, ValidationError{Field: "alias", Message: "apenas letras minúsculas, números, - e _"})
+		errs = append(errs, ValidationError{Field: "alias", Message: "apenas letras minúsculas, números, ponto, - e _"})
 	}
 	validTypes := map[string]bool{"ed25519": true, "rsa": true, "ecdsa": true}
 	if !validTypes[k.Type] {
 		errs = append(errs, ValidationError{Field: "keyType", Message: "tipo inválido"})
+	}
+	return errs
+}
+
+// ValidateShellAlias valida um ShellAlias antes de salvar.
+func ValidateShellAlias(a ShellAlias) []ValidationError {
+	var errs []ValidationError
+	if strings.TrimSpace(a.Name) == "" {
+		errs = append(errs, ValidationError{Field: "name", Message: "obrigatório"})
+	} else if !validAliasNameRe.MatchString(a.Name) {
+		errs = append(errs, ValidationError{Field: "name", Message: "apenas letras, números, _ e -"})
+	}
+	if strings.TrimSpace(a.Command) == "" {
+		errs = append(errs, ValidationError{Field: "command", Message: "obrigatório"})
+	}
+	return errs
+}
+
+// ValidateEnvFile valida um EnvFile antes de salvar.
+func ValidateEnvFile(e EnvFile) []ValidationError {
+	var errs []ValidationError
+	if strings.TrimSpace(e.Name) == "" {
+		errs = append(errs, ValidationError{Field: "name", Message: "obrigatório"})
 	}
 	return errs
 }
@@ -89,7 +115,7 @@ func ValidateSimple(a Account, existing []Account) []ValidationError {
 		errs = append(errs, ValidationError{Field: "name", Message: "obrigatório"})
 	}
 	if !validAliasRe.MatchString(a.HostAlias) {
-		errs = append(errs, ValidationError{Field: "hostAlias", Message: "apenas letras minúsculas, números, - e _"})
+		errs = append(errs, ValidationError{Field: "hostAlias", Message: "apenas letras minúsculas, números, ponto, - e _"})
 	}
 	for _, e := range existing {
 		if e.HostAlias == a.HostAlias && e.ID != a.ID {

@@ -1,0 +1,26 @@
+{{define "apiclient/history.html"}}
+<div style="overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead>
+      <tr style="border-bottom:1px solid var(--border);text-align:left">
+        <th style="padding:6px">Método</th>
+        <th style="padding:6px">URL</th>
+        <th style="padding:6px">Status</th>
+        <th style="padding:6px">Tempo</th>
+        <th style="padding:6px">Data</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .History}}
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:4px 6px;font-weight:700;font-family:monospace">{{.Method}}</td>
+        <td style="padding:4px 6px;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis">{{.URL}}</td>
+        <td style="padding:4px 6px;color:{{statusColor .StatusCode}}">{{.StatusCode}}</td>
+        <td style="padding:4px 6px">{{.ResponseTime}}ms</td>
+        <td style="padding:4px 6px;color:var(--text-secondary)">{{.RequestedAt.Format "15:04:05"}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

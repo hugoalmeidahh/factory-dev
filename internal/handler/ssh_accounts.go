@@ -65,10 +65,10 @@ func (h *Handler) ListAccounts(w http.ResponseWriter, r *http.Request) {
 				keyName = k.Name
 			}
 		} else if a.IdentityFile != "" {
-			// Legacy: usa IdentityFile diretamente
+			// Legacy: usa IdentityFile diretamente (sem depender do alias)
 			kt := a.EffectiveKeyType()
-			privPath = h.app.Paths.PrivateKeyForType(a.HostAlias, kt)
-			pubPath = h.app.Paths.PublicKeyForType(a.HostAlias, kt)
+			privPath = expandHome(a.IdentityFile, h.app.Paths.Home)
+			pubPath = privPath + ".pub"
 			keyTyp = kt
 		}
 
@@ -209,8 +209,6 @@ func (h *Handler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.successToast(w, "Conta criada com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListAccounts(w, r)
 }
 
 func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
@@ -285,8 +283,6 @@ func (h *Handler) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.successToast(w, "Conta atualizada com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListAccounts(w, r)
 }
 
 func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
@@ -315,8 +311,6 @@ func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.successToast(w, "Conta removida com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListAccounts(w, r)
 }
 
 func (h *Handler) ApplySSHConfig(w http.ResponseWriter, r *http.Request) {
@@ -338,8 +332,6 @@ func (h *Handler) ApplySSHConfig(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.successToast(w, "SSH config aplicado com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListAccounts(w, r)
 }
 
 func (h *Handler) PreviewApplySSHConfig(w http.ResponseWriter, r *http.Request) {

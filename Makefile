@@ -1,15 +1,20 @@
 APP     = factorydev
 VERSION ?= dev
 LDFLAGS = -ldflags "-s -w -X main.Version=$(VERSION)"
+TAGS    = systray,webview
 
-.PHONY: dev build release clean lint verify-release
+.PHONY: dev build build-headless release clean lint verify-release
 
 dev:
-	go run ./cmd/factorydev/...
+	go run -tags $(TAGS) ./cmd/factorydev/...
 
 build:
 	mkdir -p bin
-	go build $(LDFLAGS) -o bin/$(APP) ./cmd/factorydev/...
+	go build -tags $(TAGS) $(LDFLAGS) -o bin/$(APP) ./cmd/factorydev/...
+
+build-headless:
+	mkdir -p bin
+	go build -tags systray $(LDFLAGS) -o bin/$(APP) ./cmd/factorydev/...
 
 release:
 	mkdir -p dist

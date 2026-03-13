@@ -105,7 +105,6 @@ func (h *Handler) CreateServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.successToast(w, "Servidor criado!")
-	h.ListServers(w, r)
 }
 
 // GET /tools/servers/{id}/edit
@@ -174,7 +173,6 @@ func (h *Handler) UpdateServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.successToast(w, "Servidor atualizado!")
-	h.ListServers(w, r)
 }
 
 // DELETE /tools/servers/{id}
@@ -203,7 +201,6 @@ func (h *Handler) DeleteServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.successToast(w, "Servidor removido!")
-	h.ListServers(w, r)
 }
 
 // POST /tools/servers/{id}/test

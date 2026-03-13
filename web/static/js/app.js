@@ -6,6 +6,15 @@ function inferPage() {
   if (p.startsWith('/tools/repos')) return 'repos'
   if (p.startsWith('/tools/git')) return 'git'
   if (p.startsWith('/tools/servers')) return 'servers'
+  if (p.startsWith('/tools/envs')) return 'envs'
+  if (p.startsWith('/tools/aliases')) return 'aliases'
+  if (p.startsWith('/tools/installer')) return 'installer'
+  if (p.startsWith('/tools/tasks')) return 'tasks'
+  if (p.startsWith('/tools/network')) return 'network'
+  if (p.startsWith('/tools/firewall')) return 'firewall'
+  if (p.startsWith('/tools/mcp')) return 'mcp'
+  if (p.startsWith('/tools/db')) return 'database'
+  if (p.startsWith('/tools/api')) return 'api'
   if (p.startsWith('/tools/system')) return 'system'
   if (p.startsWith('/tools/docker')) return 'docker'
   if (p.startsWith('/doctor')) return 'doctor'
@@ -41,12 +50,46 @@ function closeDrawer() {
 document.body.addEventListener('openDrawer', openDrawer)
 document.body.addEventListener('closeDrawer', closeDrawer)
 
-// ── Refresh da lista de repositórios ───────────────────────────
-document.body.addEventListener('refreshRepos', function () {
+// ── Refresh genérico da lista ativa ───────────────────────────
+// Mapa de página → URL de refresh
+var refreshRoutes = {
+  ssh:     '/tools/ssh/accounts',
+  keys:    '/tools/keys',
+  repos:   '/tools/repos',
+  git:     '/tools/git',
+  servers: '/tools/servers',
+  envs:    '/tools/envs',
+  aliases:   '/tools/aliases',
+  installer: '/tools/installer',
+  api:       '/tools/api',
+  mcp:       '/tools/mcp',
+  database:  '/tools/db',
+  docker:    '/tools/docker'
+}
+
+function refreshCurrentList() {
   if (!window.htmx) return
-  // Só atualiza se o usuário ainda estiver na página de repos
-  if (window.location.pathname.startsWith('/tools/repos')) {
-    htmx.ajax('GET', '/tools/repos', { target: '#main-content', swap: 'innerHTML' })
+  var page = inferPage()
+  var url = refreshRoutes[page]
+  if (url) {
+    htmx.ajax('GET', url, { target: '#main-content', swap: 'innerHTML' })
+  }
+}
+
+document.body.addEventListener('refreshList', refreshCurrentList)
+
+// Mantém compat com eventos específicos existentes
+document.body.addEventListener('refreshRepos', refreshCurrentList)
+document.body.addEventListener('refreshContainers', function () {
+  if (!window.htmx) return
+  if (inferPage() === 'docker') {
+    htmx.ajax('GET', '/tools/docker/containers', { target: '#docker-containers', swap: 'innerHTML' })
+  }
+})
+document.body.addEventListener('refreshImages', function () {
+  if (!window.htmx) return
+  if (inferPage() === 'docker') {
+    htmx.ajax('GET', '/tools/docker/images', { target: '#docker-images', swap: 'innerHTML' })
   }
 })
 
@@ -70,6 +113,7 @@ document.body.addEventListener('htmx:responseError', function (e) {
       if (events.showToast) showToastMsg(events.showToast.msg, events.showToast.type || 'error')
       if (events.openDrawer)  openDrawer()
       if (events.closeDrawer) closeDrawer()
+      if (events.refreshList) refreshCurrentList()
     } catch (_) {}
   } else {
     // Valor simples (ex: "openDrawer")

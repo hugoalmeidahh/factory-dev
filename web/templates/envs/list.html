@@ -1,0 +1,83 @@
+{{define "envs/list.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Env Variables</h1>
+      <p>Gerencie arquivos .env centralizados para seus projetos.</p>
+    </div>
+    <button class="fdev-btn"
+      hx-get="/tools/envs/new"
+      hx-target="#drawer-content">
+      Novo .env
+    </button>
+  </header>
+
+  {{if eq (len .EnvFiles) 0}}
+  <div class="fdev-empty">
+    <h2>Nenhum arquivo .env cadastrado</h2>
+    <p>Crie arquivos .env para centralizar variáveis de ambiente dos seus projetos.</p>
+    <button class="fdev-btn"
+      hx-get="/tools/envs/new"
+      hx-target="#drawer-content">
+      Novo .env
+    </button>
+  </div>
+  {{else}}
+  <div class="fdev-list">
+    {{range .EnvFiles}}
+    <article class="fdev-list-card">
+      <div class="fdev-list-card-header">
+        <div class="fdev-list-card-info">
+          <h3 class="fdev-list-card-name">{{.Name}}</h3>
+          <p class="fdev-list-card-sub">
+            {{len .Variables}} variáveis
+            {{if .ProjectPath}} · {{.ProjectPath}}{{end}}
+          </p>
+        </div>
+        <div class="fdev-list-card-actions">
+          <button class="fdev-btn fdev-btn--sm"
+            hx-post="/tools/envs/{{.ID}}/export">
+            Exportar .env
+          </button>
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-get="/tools/envs/{{.ID}}/edit"
+            hx-target="#drawer-content">
+            Editar
+          </button>
+          <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+            hx-delete="/tools/envs/{{.ID}}"
+            hx-target="#main-content"
+            hx-confirm="Remover arquivo .env {{.Name}}?">
+            Remover
+          </button>
+        </div>
+      </div>
+
+      {{if .Variables}}
+      <div style="padding:0 16px 12px">
+        <table style="width:100%;font-size:13px;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);text-align:left">
+              <th style="padding:4px 8px;font-weight:600;width:30%">Chave</th>
+              <th style="padding:4px 8px;font-weight:600">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range $k, $v := .Variables}}
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:4px 8px;font-family:monospace;font-size:12px">{{$k}}</td>
+              <td style="padding:4px 8px;font-family:monospace;font-size:12px;color:var(--text-secondary)">{{$v}}</td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+      {{end}}
+    </article>
+    {{end}}
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "envs/list.html" .}}{{end}}

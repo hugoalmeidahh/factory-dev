@@ -1,0 +1,33 @@
+{{define "mcp/skill-drawer.html"}}
+<form class="fdev-form"
+      {{if .Skill.ID}}
+        hx-post="/tools/mcp/skills/{{.Skill.ID}}"
+      {{else}}
+        hx-post="/tools/mcp/skills"
+      {{end}}>
+
+  <div class="fdev-form-group">
+    <label>Nome</label>
+    <input type="text" name="name" value="{{.Skill.Name}}" placeholder="Ex: code-review" required>
+  </div>
+
+  <div class="fdev-form-group">
+    <label>Descrição</label>
+    <input type="text" name="description" value="{{.Skill.Description}}" placeholder="Breve descrição da skill">
+  </div>
+
+  <div class="fdev-form-group">
+    <label>Prompt</label>
+    <textarea name="prompt" rows="10" required
+              style="font-family:monospace;font-size:13px;resize:vertical"
+              placeholder="Escreva o prompt template aqui...&#10;Use {{`{{variavel}}`}} para placeholders.">{{.Skill.Prompt}}</textarea>
+  </div>
+
+  <div class="fdev-form-group">
+    <label>Tags (separadas por vírgula)</label>
+    <input type="text" name="tags" value="{{join .Skill.Tags ", "}}" placeholder="Ex: review, code, quality">
+  </div>
+
+  <button class="fdev-btn" type="submit">Salvar</button>
+</form>
+{{end}}

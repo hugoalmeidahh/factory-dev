@@ -1,0 +1,83 @@
+{{define "apiclient/endpoint-drawer.html"}}
+<div class="fdev-drawer-header">
+  <h2>{{if .IsEdit}}Editar Endpoint{{else}}Novo Endpoint{{end}}</h2>
+  <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">✕</button>
+</div>
+<div class="fdev-drawer-body"
+  x-data='{
+    headers: {{.HeadersJSON}},
+    addHeader() { this.headers.push({key: "", value: ""}) },
+    removeHeader(i) { this.headers.splice(i, 1) },
+    serializeHeaders() { return JSON.stringify(this.headers.filter(v => v.key.trim() !== "")) }
+  }'>
+  <form class="fdev-form"
+    hx-post="{{.SubmitURL}}"
+    hx-target="#main-content"
+    hx-push-url="/tools/api"
+    @submit="$refs.headersInput.value = serializeHeaders()">
+
+    <label style="font-size:14px;font-weight:600">Nome *</label>
+    <input type="text" name="name"
+      value="{{if .Endpoint}}{{.Endpoint.Name}}{{end}}"
+      placeholder="ex: List Users, Create Item" required>
+
+    <label style="font-size:14px;font-weight:600">Collection</label>
+    <select name="collectionId" style="border:1px solid var(--border);border-radius:8px;padding:8px">
+      <option value="">— sem collection —</option>
+      {{range .Collections}}
+      <option value="{{.ID}}"
+        {{if and $.Endpoint (eq $.Endpoint.CollectionID .ID)}}selected{{end}}>
+        {{.Name}}
+      </option>
+      {{end}}
+    </select>
+
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:8px;margin-top:8px">
+      <div>
+        <label style="font-size:14px;font-weight:600">Método</label>
+        <select name="method" style="border:1px solid var(--border);border-radius:8px;padding:8px;font-weight:600">
+          {{$m := "GET"}}{{if .Endpoint}}{{$m = .Endpoint.Method}}{{end}}
+          <option value="GET" {{if eq $m "GET"}}selected{{end}}>GET</option>
+          <option value="POST" {{if eq $m "POST"}}selected{{end}}>POST</option>
+          <option value="PUT" {{if eq $m "PUT"}}selected{{end}}>PUT</option>
+          <option value="DELETE" {{if eq $m "DELETE"}}selected{{end}}>DELETE</option>
+          <option value="PATCH" {{if eq $m "PATCH"}}selected{{end}}>PATCH</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:14px;font-weight:600">URL *</label>
+        <input type="text" name="url"
+          value="{{if .Endpoint}}{{.Endpoint.URL}}{{end}}"
+          placeholder="https://api.example.com/{{`{{BASE_URL}}`}}/users" required
+          style="font-family:monospace;font-size:12px;width:100%">
+      </div>
+    </div>
+
+    <input type="hidden" name="headers" x-ref="headersInput">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+      <label style="font-size:14px;font-weight:600;margin:0">Headers</label>
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" @click="addHeader()">+ Header</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+      <template x-for="(h, i) in headers" :key="i">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center">
+          <input type="text" x-model="h.key" placeholder="Header-Name" style="font-family:monospace;font-size:12px">
+          <input type="text" x-model="h.value" placeholder="value" style="font-family:monospace;font-size:12px">
+          <button type="button" class="fdev-btn fdev-btn--danger fdev-btn--sm" @click="removeHeader(i)" style="padding:4px 8px">✕</button>
+        </div>
+      </template>
+    </div>
+
+    <label style="font-size:14px;font-weight:600;margin-top:12px">Body (JSON)</label>
+    <textarea name="body" rows="5"
+      placeholder='{"key": "value"}'
+      style="width:100%;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:8px;resize:vertical">{{if .Endpoint}}{{.Endpoint.Body}}{{end}}</textarea>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+      <button type="button" class="fdev-btn fdev-btn--ghost fdev-btn--sm" onclick="closeDrawer()">Cancelar</button>
+      <button class="fdev-btn" type="submit">{{if .IsEdit}}Salvar{{else}}Criar{{end}}</button>
+    </div>
+  </form>
+</div>
+{{end}}

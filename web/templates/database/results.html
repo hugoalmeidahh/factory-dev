@@ -1,0 +1,34 @@
+{{define "database/results.html"}}
+<div style="background:var(--surface);border-radius:12px;padding:16px">
+  {{if .Result.Error}}
+  <div style="color:var(--danger);font-size:13px;padding:8px;background:rgba(255,0,0,0.05);border-radius:8px">
+    <strong>Erro:</strong> {{.Result.Error}}
+  </div>
+  {{else}}
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <h3 style="font-size:14px">Resultados</h3>
+    <span style="font-size:12px;color:var(--text-secondary)">{{.Result.RowCount}} linhas</span>
+  </div>
+  <div style="overflow-x:auto;max-height:50vh;overflow-y:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);text-align:left;position:sticky;top:0;background:var(--surface)">
+          {{range .Result.Columns}}
+          <th style="padding:6px 8px;white-space:nowrap">{{.}}</th>
+          {{end}}
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Result.Rows}}
+        <tr style="border-bottom:1px solid var(--border)">
+          {{range .}}
+          <td style="padding:4px 8px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{.}}</td>
+          {{end}}
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+</div>
+{{end}}

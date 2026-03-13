@@ -1,0 +1,48 @@
+{{define "mcp/server-drawer.html"}}
+<form class="fdev-form"
+      {{if .Server.ID}}
+        hx-post="/tools/mcp/servers/{{.Server.ID}}"
+      {{else}}
+        hx-post="/tools/mcp/servers"
+      {{end}}
+      x-data="{
+        envVars: {{.EnvJSON}}
+      }">
+
+  <div class="fdev-form-group">
+    <label>Nome</label>
+    <input type="text" name="name" value="{{.Server.Name}}" placeholder="Ex: filesystem" required>
+  </div>
+
+  <div class="fdev-form-group">
+    <label>Comando</label>
+    <input type="text" name="command" value="{{.Server.Command}}" placeholder="Ex: npx" required>
+  </div>
+
+  <div class="fdev-form-group">
+    <label>Argumentos (um por linha)</label>
+    <textarea name="args" rows="3" placeholder="-y&#10;@modelcontextprotocol/server-filesystem&#10;/path/to/dir"
+              style="font-family:monospace;font-size:13px">{{join .Server.Args "\n"}}</textarea>
+  </div>
+
+  <div class="fdev-form-group">
+    <label>Variáveis de Ambiente</label>
+    <template x-for="(v, idx) in envVars" :key="idx">
+      <div style="display:flex;gap:6px;margin-bottom:4px">
+        <input type="text" x-model="v.key" placeholder="KEY" style="flex:1;font-family:monospace">
+        <input type="text" x-model="v.value" placeholder="value" style="flex:2;font-family:monospace">
+        <button type="button" class="fdev-btn fdev-btn--sm fdev-btn--danger" @click="envVars.splice(idx,1)">&times;</button>
+      </div>
+    </template>
+    <button type="button" class="fdev-btn fdev-btn--sm fdev-btn--outline" @click="envVars.push({key:'',value:''})">+ Variável</button>
+    <input type="hidden" name="envJSON" :value="JSON.stringify(envVars.reduce((o,v) => { if(v.key) o[v.key]=v.value; return o }, {}))">
+  </div>
+
+  <div class="fdev-form-group" style="display:flex;align-items:center;gap:8px">
+    <input type="checkbox" name="enabled" id="mcp-enabled" {{if .Server.Enabled}}checked{{end}}>
+    <label for="mcp-enabled" style="margin:0">Habilitado</label>
+  </div>
+
+  <button class="fdev-btn" type="submit">Salvar</button>
+</form>
+{{end}}

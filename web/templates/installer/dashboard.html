@@ -1,0 +1,58 @@
+{{define "installer/dashboard.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Installer</h1>
+      <p>Ferramentas de desenvolvimento.
+        {{if .HasPM}}Package manager: <strong>{{.PM}}</strong>{{else}}<span style="color:var(--danger)">Nenhum package manager detectado</span>{{end}}
+      </p>
+    </div>
+  </header>
+
+  <div class="fdev-list">
+    {{range .Tools}}
+    <article class="fdev-list-card">
+      <div class="fdev-list-card-header">
+        <div class="fdev-list-card-info">
+          <h3 class="fdev-list-card-name">
+            {{.Name}}
+            {{if .Installed}}
+              <span style="color:var(--success);font-size:12px;font-weight:normal;margin-left:8px">Instalado</span>
+            {{else}}
+              <span style="color:var(--text-secondary);font-size:12px;font-weight:normal;margin-left:8px">Não instalado</span>
+            {{end}}
+          </h3>
+          <p class="fdev-list-card-sub">
+            {{.Description}}
+            {{if .Path}} · <code style="font-size:11px">{{.Path}}</code>{{end}}
+          </p>
+        </div>
+        <div class="fdev-list-card-actions">
+          <div id="installer-progress-{{.Name}}">
+            {{if $.HasPM}}
+              {{if .Installed}}
+              <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+                hx-post="/tools/installer/{{.Name}}/uninstall"
+                hx-target="#installer-progress-{{.Name}}"
+                hx-swap="innerHTML">
+                Desinstalar
+              </button>
+              {{else}}
+              <button class="fdev-btn fdev-btn--sm"
+                hx-post="/tools/installer/{{.Name}}/install"
+                hx-target="#installer-progress-{{.Name}}"
+                hx-swap="innerHTML">
+                Instalar
+              </button>
+              {{end}}
+            {{end}}
+          </div>
+        </div>
+      </div>
+    </article>
+    {{end}}
+  </div>
+</section>
+{{end}}
+
+{{define "content"}}{{template "installer/dashboard.html" .}}{{end}}

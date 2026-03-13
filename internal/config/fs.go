@@ -15,6 +15,7 @@ func EnsureDirectories(paths *Paths) error {
 		{paths.Keys, 0o700},
 		{paths.Logs, 0o755},
 		{paths.Backups, 0o755},
+		{paths.Envs, 0o700},
 	}
 
 	for _, d := range dirs {

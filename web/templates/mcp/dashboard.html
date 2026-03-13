@@ -1,0 +1,137 @@
+{{define "mcp/dashboard.html"}}
+<section class="fdev-section" x-data="{tab: 'servers'}">
+  <header class="fdev-header-row">
+    <div>
+      <h1>MCP & Skills</h1>
+      <p>Gerencie MCP servers e skills reutilizáveis.</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="fdev-btn" x-show="tab === 'servers'"
+              hx-get="/tools/mcp/servers/new"
+              hx-target="#drawer-content">
+        + Novo Server
+      </button>
+      <button class="fdev-btn" x-show="tab === 'skills'"
+              hx-get="/tools/mcp/skills/new"
+              hx-target="#drawer-content">
+        + Nova Skill
+      </button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--border);padding-bottom:0">
+    <button style="padding:8px 16px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px"
+            :style="tab === 'servers' ? 'border-bottom-color:var(--primary);color:var(--primary)' : 'color:var(--text-secondary)'"
+            @click="tab = 'servers'">
+      MCP Servers
+    </button>
+    <button style="padding:8px 16px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px"
+            :style="tab === 'skills' ? 'border-bottom-color:var(--primary);color:var(--primary)' : 'color:var(--text-secondary)'"
+            @click="tab = 'skills'">
+      Custom Skills
+    </button>
+  </div>
+
+  <!-- Tab: Servers -->
+  <div x-show="tab === 'servers'">
+    {{$servers := .Data.Servers}}
+    {{if not $servers}}
+    <div class="fdev-empty">
+      <p>Nenhum MCP server cadastrado.</p>
+    </div>
+    {{else}}
+    <div style="margin-bottom:12px">
+      <button class="fdev-btn fdev-btn--sm fdev-btn--outline"
+              hx-post="/tools/mcp/servers/sync"
+              hx-confirm="Sincronizar MCP servers para ~/.claude/settings.json?">
+        Sync para Claude Code
+      </button>
+    </div>
+    <div class="fdev-card-grid">
+      {{range $servers}}
+      <div class="fdev-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="font-size:15px">{{.Name}}</strong>
+          {{if .Enabled}}
+            <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--success);color:#fff">ON</span>
+          {{else}}
+            <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--text-secondary);color:#fff">OFF</span>
+          {{end}}
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">
+          <code>{{.Command}}</code>
+        </div>
+        {{if .Args}}
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">
+          Args: <code>{{join .Args " "}}</code>
+        </div>
+        {{end}}
+        <div style="display:flex;gap:6px;margin-top:8px">
+          <button class="fdev-btn fdev-btn--sm fdev-btn--outline"
+                  hx-get="/tools/mcp/servers/{{.ID}}/edit"
+                  hx-target="#drawer-content">
+            Editar
+          </button>
+          <button class="fdev-btn fdev-btn--sm fdev-btn--danger"
+                  hx-delete="/tools/mcp/servers/{{.ID}}"
+                  hx-confirm="Remover server '{{.Name}}'?">
+            Remover
+          </button>
+        </div>
+      </div>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+
+  <!-- Tab: Skills -->
+  <div x-show="tab === 'skills'">
+    {{$skills := .Data.Skills}}
+    {{if not $skills}}
+    <div class="fdev-empty">
+      <p>Nenhuma skill cadastrada.</p>
+    </div>
+    {{else}}
+    <div class="fdev-card-grid">
+      {{range $skills}}
+      <div class="fdev-card">
+        <strong style="font-size:15px">{{.Name}}</strong>
+        <div style="font-size:13px;color:var(--text-secondary);margin:4px 0 8px">{{.Description}}</div>
+        {{if .Tags}}
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">
+          {{range .Tags}}
+          <span style="font-size:11px;padding:2px 8px;border-radius:4px;background:var(--surface-hover);color:var(--text-secondary)">{{.}}</span>
+          {{end}}
+        </div>
+        {{end}}
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;max-height:60px;overflow:hidden">
+          <pre style="margin:0;white-space:pre-wrap;font-family:monospace;font-size:11px">{{.Prompt}}</pre>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="fdev-btn fdev-btn--sm fdev-btn--outline"
+                  hx-post="/tools/mcp/skills/{{.ID}}/copy"
+                  hx-swap="none"
+                  onclick="fetch('/tools/mcp/skills/{{.ID}}/copy').then(r=>r.text()).then(t=>{navigator.clipboard.writeText(t);showToastMsg('Prompt copiado!','success')})">
+            Copiar Prompt
+          </button>
+          <button class="fdev-btn fdev-btn--sm fdev-btn--outline"
+                  hx-get="/tools/mcp/skills/{{.ID}}/edit"
+                  hx-target="#drawer-content">
+            Editar
+          </button>
+          <button class="fdev-btn fdev-btn--sm fdev-btn--danger"
+                  hx-delete="/tools/mcp/skills/{{.ID}}"
+                  hx-confirm="Remover skill '{{.Name}}'?">
+            Remover
+          </button>
+        </div>
+      </div>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+</section>
+{{end}}
+
+{{define "content"}}{{template "mcp/dashboard.html" .}}{{end}}

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,11 +13,14 @@ type Paths struct {
 	Keys    string
 	Logs    string
 	Backups string
+	Envs    string
 	State   string
 	Home    string
 }
 
-var validAlias = regexp.MustCompile(`^[a-z0-9_-]+$`)
+// validAlias permite letras minúsculas, números, ponto, hífen e underscore.
+// Deve começar com letra ou número para evitar path traversal (ex: ..).
+var validAlias = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]*$`)
 
 func NewPaths() (*Paths, error) {
 	home, err := os.UserHomeDir()
@@ -30,6 +34,7 @@ func NewPaths() (*Paths, error) {
 		Keys:    filepath.Join(base, "keys"),
 		Logs:    filepath.Join(base, "logs"),
 		Backups: filepath.Join(base, "backups"),
+		Envs:    filepath.Join(base, "envs"),
 		State:   filepath.Join(base, "state.json"),
 		Home:    home,
 	}, nil
@@ -37,7 +42,7 @@ func NewPaths() (*Paths, error) {
 
 func (p *Paths) KeyDir(alias string) string {
 	if !validAlias.MatchString(alias) {
-		panic("alias inválido: " + alias)
+		slog.Warn("alias fora do padrão em KeyDir", "alias", alias)
 	}
 	return filepath.Join(p.Keys, alias)
 }

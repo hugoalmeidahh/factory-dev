@@ -173,11 +173,18 @@ func (h *Handler) StartCloneJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	identityPath := h.app.Paths.PrivateKeyForType(account.HostAlias, account.EffectiveKeyType())
-	if _, err := os.Stat(identityPath); err != nil {
+	identityPath := resolvePrivateKeyPath(account, state.Keys, h.app.Paths.Home)
+	if identityPath == "" {
 		h.render(w, "repos/clone-progress.html", map[string]any{
 			"Done": true, "OK": false,
 			"Error": "A conta selecionada não possui chave privada. Gere a chave primeiro.",
+		})
+		return
+	}
+	if _, err := os.Stat(identityPath); err != nil {
+		h.render(w, "repos/clone-progress.html", map[string]any{
+			"Done": true, "OK": false,
+			"Error": "Chave privada não encontrada em: " + identityPath,
 		})
 		return
 	}
@@ -302,8 +309,6 @@ func (h *Handler) DeleteRepository(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.repoSuccessToast(w, "Repositório removido com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.Repositories(w, r)
 }
 
 // ── Scan Repos ────────────────────────────────────────────────────
@@ -375,7 +380,6 @@ func (h *Handler) ImportScannedRepos(w http.ResponseWriter, r *http.Request) {
 	paths := r.Form["repoPaths"]
 	if len(paths) == 0 {
 		h.successToast(w, "Nenhum repositório selecionado.")
-		h.Repositories(w, r)
 		return
 	}
 
@@ -415,7 +419,6 @@ func (h *Handler) ImportScannedRepos(w http.ResponseWriter, r *http.Request) {
 		msg += fmt.Sprintf(", %d já gerenciado(s)", alreadyManaged)
 	}
 	h.successToast(w, msg)
-	h.Repositories(w, r)
 }
 
 // ── Pull Job ──────────────────────────────────────────────────────
@@ -763,13 +766,14 @@ func (h *Handler) repoAccounts() ([]reposAccountView, error) {
 	}
 	out := make([]reposAccountView, 0, len(state.Accounts))
 	for _, a := range state.Accounts {
-		_, err := os.Stat(h.app.Paths.PrivateKeyForType(a.HostAlias, a.EffectiveKeyType()))
+		privPath := resolvePrivateKeyPath(a, state.Keys, h.app.Paths.Home)
+		_, err := os.Stat(privPath)
 		out = append(out, reposAccountView{
 			ID:        a.ID,
 			Name:      a.Name,
 			HostAlias: a.HostAlias,
 			HostName:  a.HostName,
-			HasKey:    err == nil,
+			HasKey:    privPath != "" && err == nil,
 		})
 	}
 	return out, nil

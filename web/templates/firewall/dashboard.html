@@ -1,0 +1,84 @@
+{{define "firewall/dashboard.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>Firewall</h1>
+      <p>Engine: <strong>{{.Status.Engine}}</strong>
+        {{if eq .Status.Engine "none"}}
+          <span style="color:var(--danger)"> (nenhum firewall detectado)</span>
+        {{end}}
+      </p>
+    </div>
+  </header>
+
+  {{if ne .Status.Engine "none"}}
+  <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--surface);border-radius:12px;margin-bottom:16px">
+    <span style="font-weight:600">Status:</span>
+    {{if .Status.Enabled}}
+      <span style="color:var(--success);font-weight:600">Ativo</span>
+      <form hx-post="/tools/firewall/toggle" style="margin:0">
+        <input type="hidden" name="enable" value="false">
+        <button class="fdev-btn fdev-btn--danger fdev-btn--sm" type="submit"
+          hx-confirm="Desativar o firewall?">
+          Desativar
+        </button>
+      </form>
+    {{else}}
+      <span style="color:var(--danger);font-weight:600">Inativo</span>
+      <form hx-post="/tools/firewall/toggle" style="margin:0">
+        <input type="hidden" name="enable" value="true">
+        <button class="fdev-btn fdev-btn--sm" type="submit">Ativar</button>
+      </form>
+    {{end}}
+  </div>
+
+  {{if .Status.Rules}}
+  <h3 style="margin:16px 0 8px">Regras Ativas</h3>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);text-align:left">
+          <th style="padding:8px">#</th>
+          <th style="padding:8px">Regra</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Status.Rules}}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 8px">{{.ID}}</td>
+          <td style="padding:6px 8px;font-family:monospace;font-size:12px">{{.Raw}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+  <h3 style="margin:24px 0 8px">Adicionar Regra</h3>
+  <form class="fdev-form" hx-post="/tools/firewall/rules"
+    style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+    <div>
+      <label style="font-size:13px;font-weight:600">Porta</label>
+      <input type="text" name="port" placeholder="ex: 8080" style="width:100px" required>
+    </div>
+    <div>
+      <label style="font-size:13px;font-weight:600">Protocolo</label>
+      <select name="proto" style="border:1px solid var(--border);border-radius:8px;padding:6px">
+        <option value="tcp">TCP</option>
+        <option value="udp">UDP</option>
+      </select>
+    </div>
+    <div>
+      <label style="font-size:13px;font-weight:600">Ação</label>
+      <select name="action" style="border:1px solid var(--border);border-radius:8px;padding:6px">
+        <option value="allow">Allow</option>
+        <option value="deny">Deny</option>
+      </select>
+    </div>
+    <button class="fdev-btn fdev-btn--sm" type="submit">Adicionar</button>
+  </form>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "firewall/dashboard.html" .}}{{end}}

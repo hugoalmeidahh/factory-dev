@@ -159,8 +159,6 @@ func (h *Handler) CreateKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.successToast(w, "Chave criada com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListKeys(w, r)
 }
 
 func (h *Handler) DeleteKey(w http.ResponseWriter, r *http.Request) {
@@ -197,8 +195,6 @@ func (h *Handler) DeleteKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.successToast(w, "Chave removida com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListKeys(w, r)
 }
 
 func (h *Handler) RegenPublicKey(w http.ResponseWriter, r *http.Request) {
@@ -228,8 +224,6 @@ func (h *Handler) RegenPublicKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.successToast(w, "Chave pública regenerada com sucesso!")
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListKeys(w, r)
 }
 
 func (h *Handler) ExportKeyBase64(w http.ResponseWriter, r *http.Request) {
@@ -385,8 +379,6 @@ func (h *Handler) ImportKeys(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.successToast(w, fmt.Sprintf("%d chave(s) importada(s) com sucesso!", imported))
-	w.Header().Set("HX-Retarget", "#main-content")
-	h.ListKeys(w, r)
 }
 
 // ── Helpers ───────────────────────────────────────────────────────

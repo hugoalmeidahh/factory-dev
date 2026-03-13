@@ -120,7 +120,6 @@ func (h *Handler) CreateIdentity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.successToast(w, "Identidade criada!")
-	h.ListIdentities(w, r)
 }
 
 // GET /tools/git/identities/{id}/edit
@@ -188,7 +187,6 @@ func (h *Handler) UpdateIdentity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.successToast(w, "Identidade atualizada!")
-	h.ListIdentities(w, r)
 }
 
 // DELETE /tools/git/identities/{id}
@@ -217,7 +215,6 @@ func (h *Handler) DeleteIdentity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.successToast(w, "Identidade removida!")
-	h.ListIdentities(w, r)
 }
 
 // GET /tools/git/global-config

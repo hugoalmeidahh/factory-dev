@@ -1,0 +1,53 @@
+{{define "database/tables.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>{{.Conn.Name}}</h1>
+      <p>
+        <span style="font-size:12px;color:var(--text-secondary)">{{.Conn.Driver}} — {{.Conn.Database}}</span>
+        <a href="/tools/db" hx-get="/tools/db" hx-target="#main-content" hx-push-url="/tools/db"
+           style="margin-left:12px;font-size:13px">← Voltar</a>
+      </p>
+    </div>
+  </header>
+
+  <div style="display:grid;grid-template-columns:240px 1fr;gap:16px;min-height:400px">
+    <!-- Sidebar: tabelas -->
+    <div style="background:var(--surface);border-radius:12px;padding:12px;overflow-y:auto;max-height:70vh">
+      <h3 style="font-size:14px;margin-bottom:8px">Tabelas ({{len .Tables}})</h3>
+      {{range .Tables}}
+      <div style="padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center"
+           class="fdev-hover-item">
+        <span hx-get="/tools/db/connections/{{$.Conn.ID}}/tables/{{.Name}}"
+              hx-target="#db-detail-panel"
+              style="flex:1;cursor:pointer">
+          {{.Name}}
+        </span>
+        <span style="font-size:10px;color:var(--text-secondary);text-transform:uppercase">{{.Type}}</span>
+      </div>
+      {{else}}
+      <p style="font-size:13px;color:var(--text-secondary)">Nenhuma tabela encontrada.</p>
+      {{end}}
+    </div>
+
+    <!-- Painel direito: detail + query -->
+    <div id="db-detail-panel" style="display:flex;flex-direction:column;gap:16px">
+      <!-- Query editor -->
+      <div style="background:var(--surface);border-radius:12px;padding:16px">
+        <h3 style="font-size:14px;margin-bottom:8px">Query</h3>
+        <form hx-post="/tools/db/connections/{{.Conn.ID}}/query" hx-target="#db-query-results">
+          <textarea name="query" rows="4"
+                    style="width:100%;font-family:monospace;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:8px;resize:vertical"
+                    placeholder="SELECT * FROM ... LIMIT 100"></textarea>
+          <button class="fdev-btn fdev-btn--sm" type="submit" style="margin-top:8px">Executar</button>
+        </form>
+      </div>
+
+      <!-- Resultados -->
+      <div id="db-query-results"></div>
+    </div>
+  </div>
+</section>
+{{end}}
+
+{{define "content"}}{{template "database/tables.html" .}}{{end}}

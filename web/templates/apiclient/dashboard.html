@@ -1,0 +1,150 @@
+{{define "apiclient/dashboard.html"}}
+<section class="fdev-section">
+  <header class="fdev-header-row">
+    <div>
+      <h1>API Client</h1>
+      <p>Teste endpoints HTTP organizados em collections.</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="fdev-btn"
+        hx-get="/tools/api/collections/new"
+        hx-target="#drawer-content">
+        Nova Collection
+      </button>
+    </div>
+  </header>
+
+  {{/* Quick test */}}
+  <div style="background:var(--surface);border-radius:12px;padding:16px;margin-bottom:20px"
+    x-data="{method:'GET', url:'', body:''}">
+    <h3 style="margin:0 0 12px;font-size:14px">Teste Rápido</h3>
+    <form hx-post="/tools/api/send"
+      hx-target="#quick-response"
+      hx-swap="innerHTML"
+      style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <div>
+        <select name="method" x-model="method" style="border:1px solid var(--border);border-radius:8px;padding:8px;font-weight:600">
+          <option>GET</option>
+          <option>POST</option>
+          <option>PUT</option>
+          <option>DELETE</option>
+          <option>PATCH</option>
+        </select>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <input type="text" name="url" x-model="url" placeholder="https://api.example.com/endpoint" required
+          style="width:100%;font-family:monospace">
+      </div>
+      <button class="fdev-btn" type="submit">Enviar</button>
+    </form>
+    <div x-show="method !== 'GET'" style="margin-top:8px">
+      <textarea name="body" form="" x-model="body" placeholder='{"key": "value"}' rows="3"
+        style="width:100%;font-family:monospace;font-size:12px;border:1px solid var(--border);border-radius:8px;padding:8px;resize:vertical"></textarea>
+    </div>
+    <div id="quick-response" style="margin-top:12px"></div>
+  </div>
+
+  {{/* Collections */}}
+  {{if eq (len .Collections) 0}}
+  <div class="fdev-empty">
+    <h2>Nenhuma collection</h2>
+    <p>Crie collections para organizar seus endpoints com auth e variáveis separadas.</p>
+  </div>
+  {{else}}
+  <div class="fdev-list">
+    {{range .Collections}}
+    <article class="fdev-list-card">
+      <div class="fdev-list-card-header">
+        <div class="fdev-list-card-info">
+          <h3 class="fdev-list-card-name">{{.Name}}</h3>
+          <p class="fdev-list-card-sub">
+            Auth: {{.AuthType}} · {{len .Endpoints}} endpoints
+            {{if .EnvVars}} · {{len .EnvVars}} vars{{end}}
+          </p>
+        </div>
+        <div class="fdev-list-card-actions">
+          <button class="fdev-btn fdev-btn--sm"
+            hx-get="/tools/api/endpoints/new?collectionId={{.ID}}"
+            hx-target="#drawer-content">
+            + Endpoint
+          </button>
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm"
+            hx-get="/tools/api/collections/{{.ID}}/edit"
+            hx-target="#drawer-content">
+            Editar
+          </button>
+          <button class="fdev-btn fdev-btn--danger fdev-btn--sm"
+            hx-delete="/tools/api/collections/{{.ID}}"
+            hx-target="#main-content"
+            hx-confirm="Remover collection {{.Name}} e seus endpoints?">
+            Remover
+          </button>
+        </div>
+      </div>
+
+      {{if .Endpoints}}
+      <div style="padding:0 16px 12px">
+        {{range .Endpoints}}
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--border)">
+          <span style="font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface);min-width:50px;text-align:center;font-family:monospace">{{.Method}}</span>
+          <span style="font-family:monospace;font-size:12px;flex:1">{{.URL}}</span>
+          <span style="font-size:12px;color:var(--text-secondary)">{{.Name}}</span>
+          <button class="fdev-btn fdev-btn--sm" style="padding:2px 8px;font-size:11px"
+            hx-post="/tools/api/endpoints/{{.ID}}/send"
+            hx-target="#ep-response-{{.ID}}"
+            hx-swap="innerHTML">
+            Send
+          </button>
+          <button class="fdev-btn fdev-btn--ghost fdev-btn--sm" style="padding:2px 8px;font-size:11px"
+            hx-get="/tools/api/endpoints/{{.ID}}/edit"
+            hx-target="#drawer-content">
+            Edit
+          </button>
+          <button class="fdev-btn fdev-btn--danger fdev-btn--sm" style="padding:2px 6px;font-size:11px"
+            hx-delete="/tools/api/endpoints/{{.ID}}"
+            hx-target="#main-content"
+            hx-confirm="Remover endpoint {{.Name}}?">
+            ✕
+          </button>
+        </div>
+        <div id="ep-response-{{.ID}}"></div>
+        {{end}}
+      </div>
+      {{end}}
+    </article>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{/* History */}}
+  {{if .History}}
+  <h3 style="margin:24px 0 8px">Histórico Recente</h3>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);text-align:left">
+          <th style="padding:6px">Método</th>
+          <th style="padding:6px">URL</th>
+          <th style="padding:6px">Status</th>
+          <th style="padding:6px">Tempo</th>
+          <th style="padding:6px">Data</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .History}}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:4px 6px;font-weight:700;font-family:monospace">{{.Method}}</td>
+          <td style="padding:4px 6px;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis">{{.URL}}</td>
+          <td style="padding:4px 6px;color:{{statusColor .StatusCode}}">{{.StatusCode}}</td>
+          <td style="padding:4px 6px">{{.ResponseTime}}ms</td>
+          <td style="padding:4px 6px;color:var(--text-secondary)">{{.RequestedAt.Format "15:04:05"}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+{{define "content"}}{{template "apiclient/dashboard.html" .}}{{end}}

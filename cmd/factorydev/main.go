@@ -56,16 +56,37 @@ func runServer() {
 			log.Fatal(err)
 		}
 	}()
+
+	host := cfg.Host
+	if host == "0.0.0.0" || host == "" {
+		host = "127.0.0.1"
+	}
+	serverURL := fmt.Sprintf("http://%s:%d/", host, cfg.Port)
+
+	// Webview nativo: bloqueia a main thread (requisito Cocoa/GTK).
+	// Quando webview está ativo, não roda systray (ambos precisam da
+	// main thread no macOS — são mutuamente exclusivos).
+	if hasWebview() {
+		a.Logger.Info("abrindo janela nativa", "url", serverURL)
+		go func() {
+			quit := make(chan os.Signal, 1)
+			webviewSignalNotify(quit)
+			<-quit
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			_ = srv.Shutdown(ctx)
+			os.Exit(0)
+		}()
+		runWebview(serverURL, cfg.Debug) // bloqueia na main thread
+		return
+	}
+
+	// Sem webview: systray e/ou browser
+	if cfg.Systray {
+		go runSystray(serverURL)
+	}
 	if cfg.OpenBrowser {
 		go openBrowser(a, cfg)
-	}
-	if cfg.Systray {
-		host := cfg.Host
-		if host == "0.0.0.0" || host == "" {
-			host = "127.0.0.1"
-		}
-		serverURL := fmt.Sprintf("http://%s:%d/", host, cfg.Port)
-		go runSystray(serverURL)
 	}
 
 	quit := make(chan os.Signal, 1)

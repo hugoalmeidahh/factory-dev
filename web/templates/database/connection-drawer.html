@@ -1,0 +1,62 @@
+{{define "database/connection-drawer.html"}}
+<form class="fdev-form"
+      {{if .Conn.ID}}
+        hx-post="/tools/db/connections/{{.Conn.ID}}"
+      {{else}}
+        hx-post="/tools/db/connections"
+      {{end}}
+      x-data="{driver: '{{.Conn.Driver}}'}">
+
+  <div class="fdev-form-group">
+    <label>Nome</label>
+    <input type="text" name="name" value="{{.Conn.Name}}" placeholder="Ex: Prod Postgres" required>
+  </div>
+
+  <div class="fdev-form-group">
+    <label>Driver</label>
+    <select name="driver" x-model="driver">
+      <option value="postgres" {{if eq .Conn.Driver "postgres"}}selected{{end}}>PostgreSQL</option>
+      <option value="mysql" {{if eq .Conn.Driver "mysql"}}selected{{end}}>MySQL</option>
+      <option value="sqlite" {{if eq .Conn.Driver "sqlite"}}selected{{end}}>SQLite</option>
+    </select>
+  </div>
+
+  <template x-if="driver !== 'sqlite'">
+    <div>
+      <div class="fdev-form-group">
+        <label>Host</label>
+        <input type="text" name="host" value="{{.Conn.Host}}" placeholder="localhost">
+      </div>
+      <div class="fdev-form-group">
+        <label>Porta</label>
+        <input type="number" name="port" value="{{.Conn.Port}}" placeholder="5432">
+      </div>
+      <div class="fdev-form-group">
+        <label>Usuário</label>
+        <input type="text" name="user" value="{{.Conn.User}}" placeholder="postgres">
+      </div>
+      <div class="fdev-form-group">
+        <label>Senha</label>
+        <input type="password" name="password" value="{{.Conn.Password}}" placeholder="••••••">
+      </div>
+      <div class="fdev-form-group" x-show="driver === 'postgres'">
+        <label>SSL Mode</label>
+        <select name="sslMode">
+          <option value="disable" {{if eq .Conn.SSLMode "disable"}}selected{{end}}>disable</option>
+          <option value="require" {{if eq .Conn.SSLMode "require"}}selected{{end}}>require</option>
+          <option value="verify-ca" {{if eq .Conn.SSLMode "verify-ca"}}selected{{end}}>verify-ca</option>
+          <option value="verify-full" {{if eq .Conn.SSLMode "verify-full"}}selected{{end}}>verify-full</option>
+        </select>
+      </div>
+    </div>
+  </template>
+
+  <div class="fdev-form-group">
+    <label x-text="driver === 'sqlite' ? 'Caminho do arquivo' : 'Database'"></label>
+    <input type="text" name="database" value="{{.Conn.Database}}"
+           :placeholder="driver === 'sqlite' ? '/path/to/db.sqlite' : 'mydb'" required>
+  </div>
+
+  <button class="fdev-btn" type="submit">Salvar</button>
+</form>
+{{end}}
